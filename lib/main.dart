@@ -49,58 +49,72 @@ class _AlifRunnerState extends State<AlifRunner> {
   }
 
   Future<void> setupAlif() async {
-    final binData = await rootBundle.load('assets/alif');
-    final libcData = await rootBundle.load('assets/libc++_shared.so');
+    const platform = MethodChannel('alif/native');
 
-    final tempDir = await getTemporaryDirectory();
+    try {
+      final libDir = await platform.invokeMethod<String>('getNativeLibDir');
 
-    final alifBinFile = File('${tempDir.path}/alif');
-    final libcFile = File('${tempDir.path}/libc++_shared.so');
-
-    await alifBinFile.writeAsBytes(binData.buffer.asUint8List());
-    await libcFile.writeAsBytes(libcData.buffer.asUint8List());
-
-    await Process.run('chmod', ['+x', alifBinFile.path]);
-
-    setState(() {
-      alifBinPath = alifBinFile.path;
-    });
+      setState(() {
+        alifBinPath = "$libDir/libalif.so";
+        output += "📱 معمارية الجهاز: ${Platform.version}\n";
+      });
+    } catch (e, s) {
+      setState(() {
+        output += "خطأ أثناء جلب مسار لغة ألف: $e\n$s";
+      });
+    }
   }
 
   Future<void> runAlifCode() async {
     if (alifBinPath == null) {
       setState(() {
-        output = "خطأ في تحميل لغة ألف!";
+        output += "لغة ألف مش جاهزة! لازم تعمل setup الأول.\n";
       });
       return;
     }
 
-    final tempDir = await getTemporaryDirectory();
-    final scriptFile = File('${tempDir.path}/code.alif');
-    await scriptFile.writeAsString(controller.text);
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final scriptFile = File('${tempDir.path}/code.alif');
+      await scriptFile.writeAsString(controller.text);
 
-    final process = await Process.start(
-      alifBinPath!,
-      [scriptFile.path],
-      environment: {'LD_LIBRARY_PATH': tempDir.path},
-    );
+      final libDir = alifBinPath!.replaceAll('/libalif.so', '');
 
-    setState(() {
-      runningProcess = process;
-      output = "";
-    });
+      final process = await Process.start(
+        alifBinPath!,
+        [scriptFile.path],
+        environment: {'LD_LIBRARY_PATH': libDir},
+      );
 
-    process.stdout.transform(SystemEncoding().decoder).listen((data) {
       setState(() {
-        output += data;
+        runningProcess = process;
+        output += "بدأ تشغيل لغة ألف...\n";
       });
-    });
 
-    process.stderr.transform(SystemEncoding().decoder).listen((data) {
-      setState(() {
-        output += data;
+      process.stdout.transform(SystemEncoding().decoder).listen((data) {
+        setState(() {
+          output += data;
+        });
       });
-    });
+
+      process.stderr.transform(SystemEncoding().decoder).listen((data) {
+        setState(() {
+          output += "خطأ: $data";
+        });
+      });
+
+      process.exitCode.then((code) {
+        setState(() {
+          if (code != 0) {
+            output += "فيه مشكلة في الباينري أو في الكود.\n";
+          }
+        });
+      });
+    } catch (e, s) {
+      setState(() {
+        output += "استثناء أثناء التشغيل: $e\n$s";
+      });
+    }
   }
 
   void sendInput(String text) {
