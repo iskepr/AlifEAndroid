@@ -24,9 +24,7 @@ flutter:
     assets:
         - assets/
 
-    # fonts:
-    #   - family: Schyler
-    #     fonts:
-    #       - asset: fonts/Schyler-Regular.ttf
-    #       - asset: fonts/Schyler-Italic.ttf
-    #         style: italic
+    fonts:
+        - family: Tajawal
+          fonts:
+            - asset: assets/Tajawal.ttf

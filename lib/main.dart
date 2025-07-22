@@ -5,7 +5,14 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'widgets/terminal.dart';
 
-void main() => runApp(const MaterialApp(home: AlifRunner()));
+void main() => runApp(
+  MaterialApp(
+    debugShowCheckedModeBanner: false,
+    title: "مُحرر لغة ألف",
+    theme: ThemeData(fontFamily: 'Tajawal'),
+    home: AlifRunner(),
+  ),
+);
 
 class AlifRunner extends StatefulWidget {
   const AlifRunner({super.key});
@@ -56,7 +63,7 @@ class _AlifRunnerState extends State<AlifRunner> {
 
       setState(() {
         alifBinPath = "$libDir/libalif.so";
-        output += "📱 معمارية الجهاز: ${Platform.version}\n";
+        // output += "تم تحميل لغة ألف اصدار 5.0.0\n";
       });
     } catch (e, s) {
       setState(() {
@@ -68,7 +75,7 @@ class _AlifRunnerState extends State<AlifRunner> {
   Future<void> runAlifCode() async {
     if (alifBinPath == null) {
       setState(() {
-        output += "لغة ألف مش جاهزة! لازم تعمل setup الأول.\n";
+        output += "لغة ألف ليست متاحه حتى الان!\n";
       });
       return;
     }
@@ -88,7 +95,7 @@ class _AlifRunnerState extends State<AlifRunner> {
 
       setState(() {
         runningProcess = process;
-        output += "بدأ تشغيل لغة ألف...\n";
+        // output += "بدأ تشغيل لغة ألف...\n";
       });
 
       process.stdout.transform(SystemEncoding().decoder).listen((data) {
@@ -98,15 +105,17 @@ class _AlifRunnerState extends State<AlifRunner> {
       });
 
       process.stderr.transform(SystemEncoding().decoder).listen((data) {
-        setState(() {
-          output += "خطأ: $data";
-        });
+        if (!data.toLowerCase().contains("warning")) {
+          setState(() {
+            output += "خطأ: $data";
+          });
+        }
       });
 
       process.exitCode.then((code) {
         setState(() {
           if (code != 0) {
-            output += "فيه مشكلة في الباينري أو في الكود.\n";
+            output += "حدث خطأ في اللغة او الشفرة\n";
           }
         });
       });
@@ -135,6 +144,31 @@ class _AlifRunnerState extends State<AlifRunner> {
         padding: const EdgeInsets.only(top: 16.0),
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 20, right: 10, left: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                    label: const Text('تشغيل'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF5b3398),
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: runAlifCode,
+                  ),
+                  Text(
+                    'أدخل شفرة الف',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Expanded(
               flex: 4,
               child: IDE(controller: controller, runAlifCode: runAlifCode),

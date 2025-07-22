@@ -80,10 +80,9 @@ class _TerminalState extends State<Terminal> {
                   reverse: true,
                   child: Text(
                     widget.output.isEmpty
-                        ? 'ستظهر النتائج هنا...'
+                        ? ''
                         : widget.output,
                     style: const TextStyle(
-                      fontFamily: 'Cascadia Code',
                       fontSize: 14,
                       color: Colors.white,
                     ),
@@ -101,7 +100,6 @@ class _TerminalState extends State<Terminal> {
                         textDirection: TextDirection.rtl,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontFamily: 'Cascadia Code',
                         ),
                         decoration: const InputDecoration(
                           hintText: "ادخل هنا",
