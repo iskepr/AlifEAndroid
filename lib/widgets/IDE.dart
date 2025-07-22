@@ -13,32 +13,55 @@ class IDE extends StatefulWidget {
 class _IDEState extends State<IDE> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(maxHeight: double.infinity),
-      padding: const EdgeInsets.all(10),
-      margin: const EdgeInsets.all(5),
-      decoration: BoxDecoration(
-        color: const Color(0x60000000),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0x182d5555), width: 2),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x2079ffff),
-            offset: Offset(2, 2),
-            blurRadius: 1,
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: widget.controller,
-        maxLines: null,
-        expands: true,
-        textAlign: TextAlign.right,
-        textDirection: TextDirection.rtl,
-        style: const TextStyle(fontSize: 14, color: Colors.white),
-        decoration: const InputDecoration.collapsed(
-          hintTextDirection: TextDirection.rtl,
-          hintText: 'اكتب شفرة لغة ألف هنا...',
+    final linesCount = widget.controller.text.split('\n').length;
+
+    final lineNumbers = List.generate(
+      linesCount,
+      (index) => "${index + 1}",
+    ).join('\n');
+
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 15,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                reverse: true,
+                child: IntrinsicWidth(
+                  child: TextField(
+                    controller: widget.controller,
+                    maxLines: null,
+                    expands: true,
+                    textAlign: TextAlign.right,
+                    textDirection: TextDirection.rtl,
+                    style: const TextStyle(fontSize: 14, color: Colors.white),
+                    decoration: const InputDecoration.collapsed(
+                      hintTextDirection: TextDirection.rtl,
+                      hintText: 'اكتب شفرة لغة ألف هنا...',
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: Container(
+                alignment: Alignment.topRight,
+                padding: const EdgeInsets.only(left: 5),
+                decoration: BoxDecoration(
+                  border: Border(left: BorderSide(color: Colors.grey)),
+                ),
+                child: Text(
+                  lineNumbers,
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

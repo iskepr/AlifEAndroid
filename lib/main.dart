@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:alifeditor/widgets/IDE.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:file_picker/file_picker.dart';
 import 'widgets/terminal.dart';
 
 void main() => runApp(
@@ -45,9 +47,11 @@ class _AlifRunnerState extends State<AlifRunner> {
 
   TextEditingController inputController = TextEditingController();
 
-  String output = "";
+  final ValueNotifier<String> output = ValueNotifier("");
+
   String? alifBinPath;
   Process? runningProcess;
+  String? currentFilePath;
 
   @override
   void initState() {
@@ -61,22 +65,16 @@ class _AlifRunnerState extends State<AlifRunner> {
     try {
       final libDir = await platform.invokeMethod<String>('getNativeLibDir');
 
-      setState(() {
-        alifBinPath = "$libDir/libalif.so";
-        // output += "تم تحميل لغة ألف اصدار 5.0.0\n";
-      });
+      alifBinPath = "$libDir/libalif.so";
+      output.value += "تم تحميل لغة ألف اصدار 5.0.0\n";
     } catch (e, s) {
-      setState(() {
-        output += "خطأ أثناء جلب مسار لغة ألف: $e\n$s";
-      });
+      output.value += "خطأ أثناء جلب مسار لغة ألف: $e\n$s";
     }
   }
 
   Future<void> runAlifCode() async {
     if (alifBinPath == null) {
-      setState(() {
-        output += "لغة ألف ليست متاحه حتى الان!\n";
-      });
+      output.value += "لغة ألف ليست متاحه حتى الان!\n";
       return;
     }
 
@@ -93,102 +91,150 @@ class _AlifRunnerState extends State<AlifRunner> {
         environment: {'LD_LIBRARY_PATH': libDir},
       );
 
-      setState(() {
-        runningProcess = process;
-        // output += "بدأ تشغيل لغة ألف...\n";
-      });
+      runningProcess = process;
 
       process.stdout.transform(SystemEncoding().decoder).listen((data) {
-        setState(() {
-          output += data;
-        });
+        output.value += data;
       });
 
       process.stderr.transform(SystemEncoding().decoder).listen((data) {
         if (!data.toLowerCase().contains("warning")) {
-          setState(() {
-            output += "خطأ: $data";
-          });
+          output.value += "خطأ: $data";
         }
       });
 
       process.exitCode.then((code) {
-        setState(() {
-          if (code != 0) {
-            output += "حدث خطأ في اللغة او الشفرة\n";
-          }
-        });
+        if (code != 0) {
+          output.value += "حدث خطأ في اللغة او الشفرة\n";
+        }
       });
     } catch (e, s) {
-      setState(() {
-        output += "استثناء أثناء التشغيل: $e\n$s";
-      });
+      output.value += "استثناء أثناء التشغيل: $e\n$s";
     }
   }
 
   void sendInput(String text) {
     if (runningProcess != null) {
       runningProcess!.stdin.writeln(text);
-      setState(() {
-        output += "$text\n";
-        inputController.clear();
-      });
+      output.value += "$text\n";
+      inputController.clear();
+    }
+  }
+
+  Future<void> saveCode() async {
+    try {
+      final bytes = utf8.encode(controller.text);
+      final path = await FilePicker.platform.saveFile(
+        dialogTitle: 'حفظ الملف',
+        fileName: 'شفرة.alif',
+        bytes: bytes,
+      );
+
+      if (path == null) {
+        output.value += "تم إلغاء الحفظ.\n";
+        return;
+      }
+
+      if (!path.endsWith('.alif')) {
+        output.value +=
+            "تحذير: الملف تم حفظه بامتداد غير .alif (مثل .alif.txt). يرجى التأكد من تغيير الامتداد إلى .alif يدويًا إذا لزم الأمر.\n";
+      }
+
+      currentFilePath = path;
+      output.value += "تم الحفظ في: $path\n";
+    } catch (e) {
+      output.value += "خطأ أثناء الحفظ: $e\n";
+    }
+  }
+
+  Future<void> openCode() async {
+    try {
+      final result = await FilePicker.platform.pickFiles();
+
+      if (result != null && result.files.single.path != null) {
+        final path = result.files.single.path!;
+        final file = File(path);
+        final code = await file.readAsString();
+        setState(() {
+          controller.text = code;
+          currentFilePath = path;
+        });
+      }
+    } catch (e) {
+      output.value += "خطأ أثناء الفتح: $e\n";
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0B46),
-      body: Padding(
-        padding: const EdgeInsets.only(top: 16.0),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 20, right: 10, left: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                    label: const Text('تشغيل'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF5b3398),
-                      foregroundColor: Colors.white,
+      backgroundColor: const Color(0xFF081433),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 30, right: 10, left: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.file_open_outlined,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      onPressed: openCode,
                     ),
-                    onPressed: runAlifCode,
-                  ),
-                  Text(
-                    'أدخل شفرة الف',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                    // IconButton(
+                    //   icon: const Icon(
+                    //     Icons.save_outlined,
+                    //     color: Colors.white,
+                    //     size: 20,
+                    //   ),
+                    //   onPressed: saveCode,
+                    // ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.terminal,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (context) => Terminal(
+                            inputController: inputController,
+                            output: output,
+                            alifBinPath: alifBinPath,
+                            runningProcess: runningProcess,
+                            runAlifCode: runAlifCode,
+                            onClearOutput: () => output.value = '',
+                            onSendInput: (input) {
+                              runningProcess?.stdin.writeln(input);
+                              output.value += "$input\n";
+                              inputController.clear();
+                            },
+                          ),
+                        );
+                      },
                     ),
+                  ],
+                ),
+                const Text(
+                  "مُحرر ألف",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            Expanded(
-              flex: 4,
-              child: IDE(controller: controller, runAlifCode: runAlifCode),
-            ),
-            Expanded(
-              flex: 5,
-              child: Terminal(
-                inputController: inputController,
-                output: output,
-                alifBinPath: alifBinPath,
-                runningProcess: runningProcess,
-                onClearOutput: () => setState(() => output = ''),
-                onSendInput: (input) {
-                  runningProcess?.stdin.writeln(input);
-                  inputController.clear();
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+          IDE(controller: controller, runAlifCode: runAlifCode),
+        ],
       ),
     );
   }
