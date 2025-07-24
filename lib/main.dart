@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:file_saver/file_saver.dart';
-import 'dart:typed_data';
 import 'widgets/terminal.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -178,7 +177,6 @@ class _AlifRunnerState extends State<AlifRunner> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF081433),
-
       body: DecoratedBox(
         decoration: BoxDecoration(
           image: DecorationImage(
