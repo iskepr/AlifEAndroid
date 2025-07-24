@@ -14,7 +14,6 @@ class _IDEState extends State<IDE> {
   @override
   Widget build(BuildContext context) {
     final linesCount = widget.controller.text.split('\n').length;
-
     final lineNumbers = List.generate(
       linesCount,
       (index) => "${index + 1}",
@@ -52,12 +51,10 @@ class _IDEState extends State<IDE> {
               child: Container(
                 alignment: Alignment.topRight,
                 padding: const EdgeInsets.only(left: 5),
-                decoration: BoxDecoration(
-                  border: Border(left: BorderSide(color: Colors.grey)),
-                ),
                 child: Text(
                   lineNumbers,
-                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey, fontSize: 14.5),
                 ),
               ),
             ),

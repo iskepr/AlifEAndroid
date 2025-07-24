@@ -5,12 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:file_saver/file_saver.dart';
+import 'dart:typed_data';
 import 'widgets/terminal.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 void main() => runApp(
   MaterialApp(
     debugShowCheckedModeBanner: false,
-    title: "مُحرر لغة ألف",
+    title: "مُحرر طيف",
     theme: ThemeData(fontFamily: 'Tajawal'),
     home: AlifRunner(),
   ),
@@ -28,14 +31,16 @@ class _AlifRunnerState extends State<AlifRunner> {
     text: """
 # هذا البرنامج يقوم بطباعة الاعداد الاولية ضمن المدى المعطى له
 دالة هل_اولي(عدد):
+	اذا عدد < 2:
+		ارجع
 	اذا عدد == 2:
 		اطبع(عدد)
 		ارجع
-	اذا عدد <= 1 او ليس عدد \\ 2:
+	اذا ليس عدد \\\\ 2:
 		ارجع
-	لاجل مقسوم في مدى(3, عدد):
-		اذا ليس عدد \\ مقسوم:
-			استمر
+	لاجل مقسوم في مدى(3, صحيح(\\^عدد) + 1, 2):
+		اذا ليس عدد \\\\ مقسوم:
+			ارجع
 	اطبع(عدد)
 اطبع("*- هذا البرنامج يقوم بإيجاد الأعداد الأولية ضمن المدى المدخل له -*")
 ن = صحيح(ادخل("ادخل عدد: "))
@@ -64,7 +69,6 @@ class _AlifRunnerState extends State<AlifRunner> {
 
     try {
       final libDir = await platform.invokeMethod<String>('getNativeLibDir');
-
       alifBinPath = "$libDir/libalif.so";
       output.value += "تم تحميل لغة ألف اصدار 5.0.0\n";
     } catch (e, s) {
@@ -123,21 +127,18 @@ class _AlifRunnerState extends State<AlifRunner> {
 
   Future<void> saveCode() async {
     try {
-      final bytes = utf8.encode(controller.text);
-      final path = await FilePicker.platform.saveFile(
-        dialogTitle: 'حفظ الملف',
-        fileName: 'شفرة.alif',
+      final bytes = Uint8List.fromList(utf8.encode(controller.text));
+
+      final path = await FileSaver.instance.saveAs(
+        name: "شفرة",
         bytes: bytes,
+        fileExtension: "alif",
+        mimeType: MimeType.other,
       );
 
-      if (path == null) {
+      if (path == null || path.isEmpty) {
         output.value += "تم إلغاء الحفظ.\n";
         return;
-      }
-
-      if (!path.endsWith('.alif')) {
-        output.value +=
-            "تحذير: الملف تم حفظه بامتداد غير .alif (مثل .alif.txt). يرجى التأكد من تغيير الامتداد إلى .alif يدويًا إذا لزم الأمر.\n";
       }
 
       currentFilePath = path;
@@ -148,8 +149,16 @@ class _AlifRunnerState extends State<AlifRunner> {
   }
 
   Future<void> openCode() async {
+    FilePickerResult? result;
     try {
-      final result = await FilePicker.platform.pickFiles();
+      if (Platform.isAndroid) {
+        result = await FilePicker.platform.pickFiles(type: FileType.any);
+      } else {
+        result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: ['alif', "aliflib", "الف"],
+        );
+      }
 
       if (result != null && result.files.single.path != null) {
         final path = result.files.single.path!;
@@ -169,72 +178,82 @@ class _AlifRunnerState extends State<AlifRunner> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF081433),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 30, right: 10, left: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.file_open_outlined,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      onPressed: openCode,
-                    ),
-                    // IconButton(
-                    //   icon: const Icon(
-                    //     Icons.save_outlined,
-                    //     color: Colors.white,
-                    //     size: 20,
-                    //   ),
-                    //   onPressed: saveCode,
-                    // ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.terminal,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (context) => Terminal(
-                            inputController: inputController,
-                            output: output,
-                            alifBinPath: alifBinPath,
-                            runningProcess: runningProcess,
-                            runAlifCode: runAlifCode,
-                            onClearOutput: () => output.value = '',
-                            onSendInput: (input) {
-                              runningProcess?.stdin.writeln(input);
-                              output.value += "$input\n";
-                              inputController.clear();
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                const Text(
-                  "مُحرر ألف",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
+
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("assets/Background.webp"),
+            fit: BoxFit.cover,
+            alignment: Alignment.topLeft,
           ),
-          IDE(controller: controller, runAlifCode: runAlifCode),
-        ],
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 30, right: 10, left: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          LucideIcons.folderOpen,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        onPressed: openCode,
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          LucideIcons.save,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        onPressed: saveCode,
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          LucideIcons.terminal,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            builder: (context) => Terminal(
+                              inputController: inputController,
+                              output: output,
+                              alifBinPath: alifBinPath,
+                              runningProcess: runningProcess,
+                              runAlifCode: runAlifCode,
+                              onClearOutput: () => output.value = '',
+                              onSendInput: (input) {
+                                runningProcess?.stdin.writeln(input);
+                                output.value += "$input\n";
+                                inputController.clear();
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  Text(
+                    currentFilePath?.split('/').last ?? "مُحرر طيف",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: currentFilePath != null ? 15 : 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            IDE(controller: controller, runAlifCode: runAlifCode),
+          ],
+        ),
       ),
     );
   }

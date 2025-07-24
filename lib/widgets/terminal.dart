@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class Terminal extends StatefulWidget {
   const Terminal({
@@ -32,8 +33,11 @@ class _TerminalState extends State<Terminal> {
       padding: const EdgeInsets.all(10),
       height: MediaQuery.of(context).size.height * 0.6,
       decoration: BoxDecoration(
-        color: const Color(0xFF0F0B46),
-        borderRadius: BorderRadius.circular(25),
+        color: const Color(0xFF0A0830),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(25),
+          topRight: Radius.circular(25),
+        ),
       ),
       child: Column(
         children: [
@@ -54,7 +58,8 @@ class _TerminalState extends State<Terminal> {
                     ),
                     IconButton(
                       icon: const Icon(
-                        Icons.play_arrow_outlined,
+                        LucideIcons.play,
+                        size: 20,
                         color: Colors.white,
                       ),
                       onPressed: widget.runAlifCode,
@@ -81,6 +86,7 @@ class _TerminalState extends State<Terminal> {
                   value.isEmpty ? '' : value,
                   style: const TextStyle(fontSize: 14, color: Colors.white),
                   textDirection: TextDirection.rtl,
+                  textAlign: TextAlign.right,
                 ),
               ),
             ),
@@ -104,7 +110,7 @@ class _TerminalState extends State<Terminal> {
               IconButton(
                 onPressed: () =>
                     widget.onSendInput(widget.inputController.text),
-                icon: const Icon(Icons.send, color: Colors.white),
+                icon: const Icon(LucideIcons.arrowRight, color: Colors.white),
               ),
             ],
           ),
