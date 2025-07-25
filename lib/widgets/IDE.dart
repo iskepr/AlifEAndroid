@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
 class IDE extends StatefulWidget {
-  const IDE({super.key, required this.controller, required this.runAlifCode});
+  const IDE({super.key, required this.controller});
 
   final TextEditingController controller;
-  final VoidCallback runAlifCode;
 
   @override
   State<IDE> createState() => _IDEState();

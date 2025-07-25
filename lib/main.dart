@@ -124,12 +124,39 @@ class _AlifRunnerState extends State<AlifRunner> {
     }
   }
 
-  Future<void> saveCode() async {
+  void openTerminal(
+    BuildContext context,
+    TextEditingController inputController,
+    ValueNotifier<String> output,
+    String? alifBinPath,
+    Process? runningProcess,
+    void Function() runAlifCode,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => Terminal(
+        inputController: inputController,
+        output: output,
+        alifBinPath: alifBinPath,
+        runningProcess: runningProcess,
+        runAlifCode: runAlifCode,
+        onClearOutput: () => output.value = '',
+        onSendInput: (input) {
+          runningProcess?.stdin.writeln(input);
+          output.value += "$input\n";
+          inputController.clear();
+        },
+      ),
+    );
+  }
+
+  Future<void> saveCode(String code, String? fileName) async {
     try {
-      final bytes = Uint8List.fromList(utf8.encode(controller.text));
+      final bytes = Uint8List.fromList(utf8.encode(code));
 
       final path = await FileSaver.instance.saveAs(
-        name: "شفرة",
+        name: fileName ?? "شفرة",
         bytes: bytes,
         fileExtension: "alif",
         mimeType: MimeType.other,
@@ -175,82 +202,101 @@ class _AlifRunnerState extends State<AlifRunner> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF081433),
-      body: DecoratedBox(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("assets/Background.webp"),
-            fit: BoxFit.cover,
-            alignment: Alignment.topLeft,
-          ),
-        ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 30, right: 10, left: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          LucideIcons.folderOpen,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                        onPressed: openCode,
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          LucideIcons.save,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                        onPressed: saveCode,
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          LucideIcons.terminal,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                        onPressed: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            builder: (context) => Terminal(
-                              inputController: inputController,
-                              output: output,
-                              alifBinPath: alifBinPath,
-                              runningProcess: runningProcess,
-                              runAlifCode: runAlifCode,
-                              onClearOutput: () => output.value = '',
-                              onSendInput: (input) {
-                                runningProcess?.stdin.writeln(input);
-                                output.value += "$input\n";
-                                inputController.clear();
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  Text(
-                    currentFilePath?.split('/').last ?? "مُحرر طيف",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: currentFilePath != null ? 15 : 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: const Color(0xFF081433),
+        body: DecoratedBox(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage("assets/Background.webp"),
+              fit: BoxFit.cover,
+              alignment: Alignment.topLeft,
             ),
-            IDE(controller: controller, runAlifCode: runAlifCode),
-          ],
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 10, right: 10, left: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            LucideIcons.folderOpen,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          onPressed: openCode,
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            LucideIcons.save,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          onPressed: () => saveCode(
+                            controller.text,
+                            currentFilePath
+                                ?.split('/')
+                                .last
+                                .replaceAll('.alif', '')
+                                .replaceAll('.aliflib', '')
+                                .replaceAll('.الف', ''),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            LucideIcons.play,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          onPressed: () => {
+                            runAlifCode(),
+                            openTerminal(
+                              context,
+                              inputController,
+                              output,
+                              alifBinPath,
+                              runningProcess,
+                              runAlifCode,
+                            ),
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            LucideIcons.terminal,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            openTerminal(
+                              context,
+                              inputController,
+                              output,
+                              alifBinPath,
+                              runningProcess,
+                              runAlifCode,
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    Text(
+                      currentFilePath?.split('/').last ?? "مُحرر طيف",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: currentFilePath != null ? 15 : 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IDE(controller: controller),
+            ],
+          ),
         ),
       ),
     );
