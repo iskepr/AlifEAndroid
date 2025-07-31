@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:alifeditor/widgets/Highlighter.dart' as highlighter;
 
 class IDE extends StatefulWidget {
-  const IDE({super.key, required this.controller});
+  const IDE({super.key, required this.controller, required this.focusNode});
   final TextEditingController controller;
+  final FocusNode focusNode;
 
   @override
   State<IDE> createState() => _IDEState();
 }
 
 class _IDEState extends State<IDE> {
-  final FocusNode _focusNode = FocusNode();
   @override
   Widget build(BuildContext context) {
     final linesCount = widget.controller.text.split('\n').length;
@@ -37,24 +37,30 @@ class _IDEState extends State<IDE> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(right: 4),
-                          child: RichText(
-                            text: TextSpan(
-                              children: highlighter.alifHighlight(
-                                widget.controller.text,
-                              ),
-                              style: TextStyle(
-                                fontSize: 15,
-                                height: 1.4,
-                                fontFamily: 'Tajawal',
-                              ),
-                            ),
-                            textAlign: TextAlign.right,
-                            textDirection: TextDirection.rtl,
+                          child: ValueListenableBuilder<TextEditingValue>(
+                            valueListenable: widget.controller,
+                            builder: (context, value, _) {
+                              return RichText(
+                                text: TextSpan(
+                                  children: highlighter.alifHighlight(
+                                    value.text,
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    height: 1.4,
+                                    fontFamily: 'Tajawal',
+                                  ),
+                                ),
+                                textAlign: TextAlign.right,
+                                textDirection: TextDirection.rtl,
+                              );
+                            },
                           ),
                         ),
+
                         TextField(
                           controller: widget.controller,
-                          focusNode: _focusNode,
+                          focusNode: widget.focusNode,
                           maxLines: null,
                           textAlign: TextAlign.right,
                           textDirection: TextDirection.rtl,

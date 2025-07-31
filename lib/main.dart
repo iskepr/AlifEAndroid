@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:alifeditor/widgets/IDE.dart';
+import 'package:alifeditor/widgets/Shortcuts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -50,6 +51,7 @@ class _AlifRunnerState extends State<AlifRunner> {
   );
 
   TextEditingController inputController = TextEditingController();
+  final FocusNode editorFocus = FocusNode();
 
   final ValueNotifier<String> output = ValueNotifier("");
 
@@ -114,41 +116,6 @@ class _AlifRunnerState extends State<AlifRunner> {
     } catch (e, s) {
       output.value += "استثناء أثناء التشغيل: $e\n$s";
     }
-  }
-
-  void sendInput(String text) {
-    if (runningProcess != null) {
-      runningProcess!.stdin.writeln(text);
-      output.value += "$text\n";
-      inputController.clear();
-    }
-  }
-
-  void openTerminal(
-    BuildContext context,
-    TextEditingController inputController,
-    ValueNotifier<String> output,
-    String? alifBinPath,
-    Process? runningProcess,
-    void Function() runAlifCode,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => Terminal(
-        inputController: inputController,
-        output: output,
-        alifBinPath: alifBinPath,
-        runningProcess: runningProcess,
-        runAlifCode: runAlifCode,
-        onClearOutput: () => output.value = '',
-        onSendInput: (input) {
-          runningProcess?.stdin.writeln(input);
-          output.value += "$input\n";
-          inputController.clear();
-        },
-      ),
-    );
   }
 
   Future<void> saveCode(String code, String? fileName) async {
@@ -255,13 +222,22 @@ class _AlifRunnerState extends State<AlifRunner> {
                           onPressed: () => {
                             output.value = '',
                             runAlifCode(),
-                            openTerminal(
-                              context,
-                              inputController,
-                              output,
-                              alifBinPath,
-                              runningProcess,
-                              runAlifCode,
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              builder: (context) => Terminal(
+                                inputController: inputController,
+                                output: output,
+                                alifBinPath: alifBinPath,
+                                runningProcess: runningProcess,
+                                runAlifCode: runAlifCode,
+                                onClearOutput: () => output.value = '',
+                                onSendInput: (input) {
+                                  runningProcess?.stdin.writeln(input);
+                                  output.value += "$input\n";
+                                  inputController.clear();
+                                },
+                              ),
                             ),
                           },
                         ),
@@ -272,13 +248,22 @@ class _AlifRunnerState extends State<AlifRunner> {
                             size: 20,
                           ),
                           onPressed: () {
-                            openTerminal(
-                              context,
-                              inputController,
-                              output,
-                              alifBinPath,
-                              runningProcess,
-                              runAlifCode,
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              builder: (context) => Terminal(
+                                inputController: inputController,
+                                output: output,
+                                alifBinPath: alifBinPath,
+                                runningProcess: runningProcess,
+                                runAlifCode: runAlifCode,
+                                onClearOutput: () => output.value = '',
+                                onSendInput: (input) {
+                                  runningProcess?.stdin.writeln(input);
+                                  output.value += "$input\n";
+                                  inputController.clear();
+                                },
+                              ),
                             );
                           },
                         ),
@@ -295,7 +280,8 @@ class _AlifRunnerState extends State<AlifRunner> {
                   ],
                 ),
               ),
-              IDE(controller: controller),
+              IDE(controller: controller, focusNode: editorFocus),
+              KeyShortcuts(controller: controller, focusNode: editorFocus),
             ],
           ),
         ),
