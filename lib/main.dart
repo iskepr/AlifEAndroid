@@ -253,6 +253,7 @@ class _AlifRunnerState extends State<AlifRunner> {
                             size: 20,
                           ),
                           onPressed: () => {
+                            output.value = '',
                             runAlifCode(),
                             openTerminal(
                               context,

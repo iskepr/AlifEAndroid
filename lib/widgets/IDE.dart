@@ -21,43 +21,54 @@ class _IDEState extends State<IDE> {
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 15,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                reverse: true,
-                child: IntrinsicWidth(
-                  child: TextField(
-                    controller: widget.controller,
-                    maxLines: null,
-                    expands: true,
-                    textAlign: TextAlign.right,
-                    textDirection: TextDirection.rtl,
-                    style: const TextStyle(fontSize: 14, color: Colors.white),
-                    decoration: const InputDecoration.collapsed(
-                      hintTextDirection: TextDirection.rtl,
-                      hintText: 'اكتب شفرة لغة ألف هنا...',
+        child: SingleChildScrollView(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 15,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  reverse: true,
+                  child: IntrinsicWidth(
+                    child: IntrinsicHeight(
+                      child: TextField(
+                        controller: widget.controller,
+                        maxLines: null,
+                        expands: true,
+                        textAlign: TextAlign.right,
+                        textDirection: TextDirection.rtl,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                        decoration: const InputDecoration.collapsed(
+                          hintTextDirection: TextDirection.rtl,
+                          hintText: 'اكتب شفرة لغة ألف هنا...',
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
                     ),
-                    onChanged: (_) => setState(() {}),
                   ),
                 ),
               ),
-            ),
-            Expanded(
-              flex: 1,
-              child: Container(
-                alignment: Alignment.topRight,
-                padding: const EdgeInsets.only(left: 5),
-                child: Text(
-                  lineNumbers,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.grey, fontSize: 14.5),
+              Expanded(
+                flex: 1,
+                child: Container(
+                  alignment: Alignment.topRight,
+                  child: Text(
+                    lineNumbers,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      height: 1.5,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
