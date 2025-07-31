@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:alifeditor/widgets/Highlighter.dart' as highlighter;
 
 class IDE extends StatefulWidget {
   const IDE({super.key, required this.controller});
-
   final TextEditingController controller;
 
   @override
@@ -10,6 +10,7 @@ class IDE extends StatefulWidget {
 }
 
 class _IDEState extends State<IDE> {
+  final FocusNode _focusNode = FocusNode();
   @override
   Widget build(BuildContext context) {
     final linesCount = widget.controller.text.split('\n').length;
@@ -31,23 +32,48 @@ class _IDEState extends State<IDE> {
                   scrollDirection: Axis.horizontal,
                   reverse: true,
                   child: IntrinsicWidth(
-                    child: IntrinsicHeight(
-                      child: TextField(
-                        controller: widget.controller,
-                        maxLines: null,
-                        expands: true,
-                        textAlign: TextAlign.right,
-                        textDirection: TextDirection.rtl,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
+                    child: Stack(
+                      alignment: Alignment.topRight,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 4),
+                          child: RichText(
+                            text: TextSpan(
+                              children: highlighter.alifHighlight(
+                                widget.controller.text,
+                              ),
+                              style: TextStyle(
+                                fontSize: 15,
+                                height: 1.4,
+                                fontFamily: 'Tajawal',
+                              ),
+                            ),
+                            textAlign: TextAlign.right,
+                            textDirection: TextDirection.rtl,
+                          ),
                         ),
-                        decoration: const InputDecoration.collapsed(
-                          hintTextDirection: TextDirection.rtl,
-                          hintText: 'اكتب شفرة لغة ألف هنا...',
+                        TextField(
+                          controller: widget.controller,
+                          focusNode: _focusNode,
+                          maxLines: null,
+                          textAlign: TextAlign.right,
+                          textDirection: TextDirection.rtl,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: const Color(0x00FFC107),
+                          ),
+                          cursorColor: Colors.white,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: const EdgeInsets.all(0),
+                            hintTextDirection: TextDirection.rtl,
+                            hintText: 'اكتب شفرة لغة ألف هنا...',
+                            hintStyle: TextStyle(color: Colors.grey),
+                          ),
+                          onChanged: (_) => setState(() {}),
                         ),
-                        onChanged: (_) => setState(() {}),
-                      ),
+                      ],
                     ),
                   ),
                 ),
