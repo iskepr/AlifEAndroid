@@ -56,7 +56,13 @@ class _IDEState extends State<IDE> {
                                   children: highlighter.alifHighlight(
                                     value.text,
                                   ),
-                                  style: mainstyle,
+                                  style: mainstyle.copyWith(
+                                    height: screenHeight > 700
+                                        ? screenWidth < 1200
+                                              ? screenHeight / 850
+                                              : screenHeight / 510
+                                        : null,
+                                  ),
                                 ),
                                 textAlign: TextAlign.right,
                                 textDirection: TextDirection.rtl,
@@ -73,14 +79,9 @@ class _IDEState extends State<IDE> {
                           textDirection: TextDirection.rtl,
                           style: mainstyle.copyWith(
                             color: Colors.transparent,
-                            height: screenHeight > 700
-                                ? screenWidth < 1200
-                                      ? screenHeight / 1050
-                                      : screenHeight / 610
-                                : null,
                             letterSpacing: screenHeight > 700
                                 ? screenWidth < 1200
-                                      ? -screenWidth / 1300
+                                      ? -screenWidth / 1200
                                       : -screenWidth / 2000
                                 : null,
                           ),

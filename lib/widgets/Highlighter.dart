@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-final Map<String, List<String>> keyWords = {
+final keyWords = {
   "keywords": [
     "ك",
     "من",
@@ -55,7 +55,7 @@ final Map<String, List<String>> keyWords = {
     "أو",
     "ليس",
   ],
-  "strings": ["\"", "'"],
+  "strings": ['"', "'"],
   "numbers": [
     "0",
     "1",
@@ -82,121 +82,87 @@ final Map<String, List<String>> keyWords = {
   "comments": ["#", "//"],
 };
 
+TextSpan colored(String t, Color c) => TextSpan(
+  text: t,
+  style: TextStyle(color: c),
+);
+
 List<TextSpan> alifHighlight(String text) {
-  List<TextSpan> spans = [];
+  final spans = <TextSpan>[];
   int i = 0;
 
+  bool isWordChar(String ch) =>
+      RegExp(r'[a-zA-Z0-9_\u0600-\u06FF]').hasMatch(ch);
+
   while (i < text.length) {
-    bool foundString = false;
-    String? mark;
+    // النصوص
     for (var m in keyWords["strings"]!) {
-      if (text.startsWith(m, i)) {
-        foundString = true;
-        mark = m;
-        break;
-      }
-    }
+      if (text.startsWith(m, i) || text.startsWith("م$m", i)) {
+        bool isFormatted = text.startsWith("م$m", i);
+        if (isFormatted) {
+          spans.add(colored("م", Colors.white));
+          i++;
+        }
+        int end = text.indexOf(m, i + 1);
+        if (end == -1) {
+          spans.add(colored(text.substring(i), Colors.green));
+          break;
+        }
 
-    if (foundString) {
-      int end = text.indexOf(mark!, i + 1);
-      if (end == -1) {
-        spans.add(
-          TextSpan(
-            text: text.substring(i),
-            style: TextStyle(color: Colors.green),
-          ),
-        );
-        break;
-      }
+        String s = text.substring(i, end + 1);
 
-      String s = text.substring(i, end + 1);
-      var matches = RegExp(r'\{([^}]+)\}').allMatches(s).toList();
-      if (matches.isEmpty) {
-        spans.add(
-          TextSpan(
-            text: s,
-            style: TextStyle(color: Colors.green),
-          ),
-        );
-      } else {
-        int pos = 0;
-        for (var m in matches) {
-          if (m.start > pos) {
-            spans.add(
-              TextSpan(
-                text: s.substring(pos, m.start),
-                style: TextStyle(color: Colors.green),
-              ),
-            );
+        if (isFormatted) {
+          var matches = RegExp(r'\{([^}]+)\}').allMatches(s);
+          if (matches.isEmpty) {
+            spans.add(colored(s, Colors.green));
+          } else {
+            int pos = 0;
+            for (var match in matches) {
+              if (match.start > pos)
+                spans.add(colored(s.substring(pos, match.start), Colors.green));
+              spans.add(colored("{", Colors.white));
+              spans.addAll(alifHighlight(match.group(1)!));
+              spans.add(colored("}", Colors.white));
+              pos = match.end;
+            }
+            if (pos < s.length)
+              spans.add(colored(s.substring(pos), Colors.green));
           }
-          spans.add(
-            TextSpan(
-              text: '{',
-              style: TextStyle(color: Colors.white),
-            ),
-          );
-          spans.add(TextSpan(children: alifHighlight(m.group(1)!)));
-          spans.add(
-            TextSpan(
-              text: '}',
-              style: TextStyle(color: Colors.white),
-            ),
-          );
-          pos = m.end;
+        } else {
+          spans.add(colored(s, Colors.green));
         }
-        if (pos < s.length) {
-          spans.add(
-            TextSpan(
-              text: s.substring(pos),
-              style: TextStyle(color: Colors.green),
-            ),
-          );
-        }
-      }
-      i = end + 1;
-      continue;
-    }
 
-    if (text[i] == '#') {
-      int end = text.indexOf('\n', i);
-      if (end == -1) end = text.length;
-      spans.add(
-        TextSpan(
-          text: text.substring(i, end),
-          style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-        ),
-      );
-      i = end;
-      continue;
-    }
-
-    if (i + 1 < text.length &&
-        text[i] != ' ' &&
-        RegExp(r'[a-zA-Z0-9_\u0600-\u06FF]').hasMatch(text[i])) {
-      int end = i;
-      while (end < text.length &&
-          RegExp(r'[a-zA-Z0-9_\u0600-\u06FF]').hasMatch(text[end])) {
-        end++;
-      }
-
-      if (end < text.length && text[end] == '(') {
-        spans.add(
-          TextSpan(
-            text: text.substring(i, end),
-            style: TextStyle(color: Color(0xFFDAB744)),
-          ),
-        );
-        spans.add(
-          TextSpan(
-            text: '(',
-            style: TextStyle(color: Colors.white),
-          ),
-        );
         i = end + 1;
         continue;
       }
     }
 
+    // التعليقات
+    if (text[i] == '#') {
+      final end = text.indexOf('\n', i);
+      spans.add(
+        TextSpan(
+          text: text.substring(i, end == -1 ? text.length : end),
+          style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+        ),
+      );
+      i = end == -1 ? text.length : end;
+      continue;
+    }
+
+    // الدوال
+    if (i + 1 < text.length && text[i] != ' ' && isWordChar(text[i])) {
+      int end = i;
+      while (end < text.length && isWordChar(text[end])) end++;
+      if (end < text.length && text[end] == '(') {
+        spans.add(colored(text.substring(i, end), Color(0xFFDAB744)));
+        spans.add(colored('(', Colors.white));
+        i = end + 1;
+        continue;
+      }
+    }
+
+    // الرمز التالي
     int next = text.length;
     for (int j = i; j < text.length; j++) {
       if (" \t\n(){}[];,#\"'".contains(text[j])) {
@@ -204,69 +170,43 @@ List<TextSpan> alifHighlight(String text) {
         break;
       }
     }
-
     if (next == i) {
-      spans.add(
-        TextSpan(
-          text: text[i],
-          style: TextStyle(color: Colors.white),
-        ),
-      );
+      spans.add(colored(text[i], Colors.white));
       i++;
       continue;
     }
 
-    String word = text.substring(i, next);
-    var num = RegExp(r'^\d+').firstMatch(word);
-    if (num != null) {
-      spans.add(
-        TextSpan(
-          text: num.group(0),
-          style: TextStyle(color: Color(0xFFc786c7)),
-        ),
-      );
-      if (num.group(0)!.length < word.length) {
+    final word = text.substring(i, next);
+
+    // الأرقام
+    final numMatch = RegExp(r'^\d+').firstMatch(word);
+    if (numMatch != null) {
+      spans.add(colored(numMatch.group(0)!, Color(0xFFc786c7)));
+      if (numMatch.group(0)!.length < word.length) {
         spans.add(
-          TextSpan(
-            text: word.substring(num.group(0)!.length),
-            style: TextStyle(color: Colors.white),
-          ),
+          colored(word.substring(numMatch.group(0)!.length), Colors.white),
         );
       }
       i = next;
       continue;
     }
 
+    // الكلمات المفتاحية و العلامات
     Color? color;
     for (var e in keyWords.entries) {
       if (e.key != "strings" && e.key != "comments" && e.value.contains(word)) {
-        switch (e.key) {
-          case "keywords":
-            color = Colors.orange;
-            break;
-          case "keywords2":
-            color = Colors.red;
-            break;
-          case "booleans":
-            color = Color(0xFF7981e6);
-            break;
-          case "operators":
-            color = Color(0xFFe06c75);
-            break;
-          case "numbers":
-            color = Color(0xFFc786c7);
-            break;
-        }
+        color = {
+          "keywords": Colors.orange,
+          "keywords2": Colors.red,
+          "booleans": Color(0xFF7981e6),
+          "operators": Color(0xFFe06c75),
+          "numbers": Color(0xFFc786c7),
+        }[e.key];
         break;
       }
     }
 
-    spans.add(
-      TextSpan(
-        text: word,
-        style: TextStyle(color: color ?? Colors.white),
-      ),
-    );
+    spans.add(colored(word, color ?? Colors.white));
     i = next;
   }
 

@@ -54,7 +54,7 @@ class _AlifRunnerState extends State<AlifRunner> {
   final ValueNotifier<String> output = ValueNotifier("");
   final ValueNotifier<Process?> runningProcess = ValueNotifier(null);
 
-final ValueNotifier<String?> currentFilePath = ValueNotifier(null);
+  final ValueNotifier<String?> currentFilePath = ValueNotifier(null);
 
   @override
   void initState() {
