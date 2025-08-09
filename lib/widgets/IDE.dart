@@ -19,6 +19,17 @@ class _IDEState extends State<IDE> {
       (index) => "${index + 1}",
     ).join('\n');
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    final mainstyle = TextStyle(
+      fontSize: 15,
+      height: 1.4,
+      letterSpacing: 0,
+      wordSpacing: 0,
+      fontFamily: 'Tajawal',
+    );
+
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -26,8 +37,8 @@ class _IDEState extends State<IDE> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                flex: 15,
+              SizedBox(
+                width: screenWidth - 50,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   reverse: true,
@@ -36,7 +47,7 @@ class _IDEState extends State<IDE> {
                       alignment: Alignment.topRight,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.only(right: 4),
+                          padding: const EdgeInsets.only(right: 3),
                           child: ValueListenableBuilder<TextEditingValue>(
                             valueListenable: widget.controller,
                             builder: (context, value, _) {
@@ -45,11 +56,7 @@ class _IDEState extends State<IDE> {
                                   children: highlighter.alifHighlight(
                                     value.text,
                                   ),
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    height: 1.4,
-                                    fontFamily: 'Tajawal',
-                                  ),
+                                  style: mainstyle,
                                 ),
                                 textAlign: TextAlign.right,
                                 textDirection: TextDirection.rtl,
@@ -64,9 +71,18 @@ class _IDEState extends State<IDE> {
                           maxLines: null,
                           textAlign: TextAlign.right,
                           textDirection: TextDirection.rtl,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: const Color(0x00FFC107),
+                          style: mainstyle.copyWith(
+                            color: Colors.transparent,
+                            height: screenHeight > 700
+                                ? screenWidth < 1200
+                                      ? screenHeight / 1050
+                                      : screenHeight / 610
+                                : null,
+                            letterSpacing: screenHeight > 700
+                                ? screenWidth < 1200
+                                      ? -screenWidth / 1300
+                                      : -screenWidth / 2000
+                                : null,
                           ),
                           cursorColor: Colors.white,
                           decoration: InputDecoration(
@@ -84,18 +100,14 @@ class _IDEState extends State<IDE> {
                   ),
                 ),
               ),
-              Expanded(
-                flex: 1,
+              SizedBox(
+                width: 30,
                 child: Container(
                   alignment: Alignment.topRight,
                   child: Text(
                     lineNumbers,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      height: 1.5,
-                      fontSize: 14,
-                    ),
+                    style: mainstyle.copyWith(color: Colors.grey),
                   ),
                 ),
               ),
