@@ -23,29 +23,7 @@ class AlifRunner extends StatefulWidget {
 }
 
 class _AlifRunnerState extends State<AlifRunner> {
-  TextEditingController controller = TextEditingController(
-    text: """
-# هذا البرنامج يقوم بطباعة الاعداد الاولية ضمن المدى المعطى له
-دالة هل_اولي(عدد):
-	اذا عدد < 2:
-		ارجع
-	اذا عدد == 2:
-		اطبع(عدد)
-		ارجع
-	اذا ليس عدد \\\\ 2:
-		ارجع
-	لاجل مقسوم في مدى(3, صحيح(\\^عدد) + 1, 2):
-		اذا ليس عدد \\\\ مقسوم:
-			ارجع
-	اطبع(عدد)
-اطبع("*- هذا البرنامج يقوم بإيجاد الأعداد الأولية ضمن المدى المدخل له -*")
-ن = صحيح(ادخل("ادخل عدد: "))
-لاجل ب في مدى(ن):
-	هل_اولي(ب)
-اطبع(م"تم إيجاد الاعداد الاولية ضمن العدد { ن }")
-""",
-  );
-
+  TextEditingController controller = TextEditingController(text: "");
   TextEditingController inputController = TextEditingController();
 
   String? alifBinPath;
@@ -130,17 +108,14 @@ class _AlifRunnerState extends State<AlifRunner> {
           ),
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 10, right: 10, left: 10),
-                child: AlifAppBar(
-                  controller: controller,
-                  currentFilePath: currentFilePath,
-                  inputController: inputController,
-                  output: output,
-                  alifBinPath: alifBinPath,
-                  runningProcess: runningProcess,
-                  runAlifCode: runAlifCode,
-                ),
+              AlifAppBar(
+                controller: controller,
+                currentFilePath: currentFilePath,
+                inputController: inputController,
+                output: output,
+                alifBinPath: alifBinPath,
+                runningProcess: runningProcess,
+                runAlifCode: runAlifCode,
               ),
               IDE(controller: controller, focusNode: editorFocus),
               KeyShortcuts(controller: controller, focusNode: editorFocus),

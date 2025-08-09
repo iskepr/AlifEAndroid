@@ -15,6 +15,7 @@ dependencies:
     lucide_icons_flutter: ^3.0.7
     file_selector: ^1.0.3
     file_saver: ^0.3.1
+    shared_preferences: ^2.5.3
 
 dev_dependencies:
     flutter_test:

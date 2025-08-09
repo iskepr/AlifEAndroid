@@ -12,6 +12,14 @@ class IDE extends StatefulWidget {
 
 class _IDEState extends State<IDE> {
   @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final linesCount = widget.controller.text.split('\n').length;
     final lineNumbers = List.generate(
@@ -94,7 +102,6 @@ class _IDEState extends State<IDE> {
                             hintText: 'اكتب شفرة لغة ألف هنا...',
                             hintStyle: TextStyle(color: Colors.grey),
                           ),
-                          onChanged: (_) => setState(() {}),
                         ),
                       ],
                     ),
