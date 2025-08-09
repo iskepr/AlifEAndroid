@@ -1,0 +1,182 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:file_saver/file_saver.dart';
+import './terminal.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+class AlifAppBar extends StatefulWidget {
+  const AlifAppBar({
+    super.key,
+    required this.controller,
+    required this.currentFilePath,
+    required this.inputController,
+    required this.output,
+    required this.alifBinPath,
+    required this.runningProcess,
+    required this.runAlifCode,
+  });
+
+  final TextEditingController controller;
+  final ValueNotifier<String?> currentFilePath;
+  final TextEditingController inputController;
+  final ValueNotifier<String> output;
+  final String? alifBinPath;
+  final ValueNotifier<Process?> runningProcess;
+  final VoidCallback runAlifCode;
+
+  @override
+  State<AlifAppBar> createState() => _AlifAppBarState();
+}
+
+class _AlifAppBarState extends State<AlifAppBar> {
+  @override
+  Widget build(BuildContext context) {
+    ValueNotifier<String> output = widget.output;
+    ValueNotifier<String?> currentFilePath = widget.currentFilePath;
+    TextEditingController controller = widget.controller;
+    TextEditingController inputController = widget.inputController;
+    String? alifBinPath = widget.alifBinPath;
+    ValueNotifier<Process?> runningProcess = widget.runningProcess;
+    VoidCallback runAlifCode = widget.runAlifCode;
+
+    Future<void> saveCode(String code, String? fileName) async {
+      try {
+        final bytes = Uint8List.fromList(utf8.encode(code));
+
+        final path = await FileSaver.instance.saveAs(
+          name: fileName ?? "شفرة",
+          bytes: bytes,
+          fileExtension: "alif",
+          mimeType: MimeType.other,
+        );
+
+        if (path == null || path.isEmpty) {
+          output.value += "تم إلغاء الحفظ.\n";
+          return;
+        }
+
+        currentFilePath.value = path;
+        output.value += "تم الحفظ في: $path\n";
+      } catch (e) {
+        output.value += "خطأ أثناء الحفظ: $e\n";
+      }
+    }
+
+    Future<void> openCode() async {
+      FilePickerResult? result;
+      try {
+        if (Platform.isAndroid) {
+          result = await FilePicker.platform.pickFiles(type: FileType.any);
+        } else {
+          result = await FilePicker.platform.pickFiles(
+            type: FileType.custom,
+            allowedExtensions: ['alif', "aliflib", "الف"],
+          );
+        }
+
+        if (result != null && result.files.single.path != null) {
+          final path = result.files.single.path!;
+          final file = File(path);
+          final code = await file.readAsString();
+          setState(() {
+            controller.text = code;
+            currentFilePath.value = path;
+          });
+        }
+      } catch (e) {
+        output.value += "خطأ أثناء الفتح: $e\n";
+      }
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(
+                LucideIcons.folderOpen,
+                color: Colors.white,
+                size: 20,
+              ),
+              onPressed: openCode,
+            ),
+            IconButton(
+              icon: const Icon(LucideIcons.save, color: Colors.white, size: 20),
+              onPressed: () => saveCode(
+                controller.text,
+                currentFilePath.value
+                    ?.split('/')
+                    .last
+                    .replaceAll('.alif', '')
+                    .replaceAll('.aliflib', '')
+                    .replaceAll('.الف', ''),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(LucideIcons.play, color: Colors.white, size: 20),
+              onPressed: () => {
+                output.value = '',
+                runAlifCode(),
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (context) => Terminal(
+                    inputController: inputController,
+                    output: output,
+                    alifBinPath: alifBinPath,
+                    runningProcess: runningProcess.value,
+                    runAlifCode: runAlifCode,
+                    onClearOutput: () => output.value = '',
+                    onSendInput: (input) {
+                      runningProcess.value?.stdin.writeln(input);
+                      output.value += "$input\n";
+                      inputController.clear();
+                    },
+                  ),
+                ),
+              },
+            ),
+            IconButton(
+              icon: const Icon(
+                LucideIcons.terminal,
+                color: Colors.white,
+                size: 20,
+              ),
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (context) => Terminal(
+                    inputController: inputController,
+                    output: output,
+                    alifBinPath: alifBinPath,
+                    runningProcess: runningProcess.value,
+                    runAlifCode: runAlifCode,
+                    onClearOutput: () => output.value = '',
+                    onSendInput: (input) {
+                      runningProcess.value?.stdin.writeln(input);
+                      output.value += "$input\n";
+                      inputController.clear();
+                    },
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        Text(
+          currentFilePath.value?.split('/').last ?? "مُحرر طيف",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: currentFilePath.value != null ? 15 : 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+}

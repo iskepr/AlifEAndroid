@@ -1,14 +1,10 @@
-import 'dart:convert';
 import 'dart:io';
+import 'package:alifeditor/widgets/AppBar.dart';
 import 'package:alifeditor/widgets/IDE.dart';
 import 'package:alifeditor/widgets/Shortcuts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:file_saver/file_saver.dart';
-import 'widgets/terminal.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 void main() => runApp(
   MaterialApp(
@@ -51,13 +47,14 @@ class _AlifRunnerState extends State<AlifRunner> {
   );
 
   TextEditingController inputController = TextEditingController();
+
+  String? alifBinPath;
   final FocusNode editorFocus = FocusNode();
 
   final ValueNotifier<String> output = ValueNotifier("");
+  final ValueNotifier<Process?> runningProcess = ValueNotifier(null);
 
-  String? alifBinPath;
-  Process? runningProcess;
-  String? currentFilePath;
+final ValueNotifier<String?> currentFilePath = ValueNotifier(null);
 
   @override
   void initState() {
@@ -96,7 +93,7 @@ class _AlifRunnerState extends State<AlifRunner> {
         environment: {'LD_LIBRARY_PATH': libDir},
       );
 
-      runningProcess = process;
+      runningProcess.value = process;
 
       process.stdout.transform(SystemEncoding().decoder).listen((data) {
         output.value += data;
@@ -118,55 +115,6 @@ class _AlifRunnerState extends State<AlifRunner> {
     }
   }
 
-  Future<void> saveCode(String code, String? fileName) async {
-    try {
-      final bytes = Uint8List.fromList(utf8.encode(code));
-
-      final path = await FileSaver.instance.saveAs(
-        name: fileName ?? "شفرة",
-        bytes: bytes,
-        fileExtension: "alif",
-        mimeType: MimeType.other,
-      );
-
-      if (path == null || path.isEmpty) {
-        output.value += "تم إلغاء الحفظ.\n";
-        return;
-      }
-
-      currentFilePath = path;
-      output.value += "تم الحفظ في: $path\n";
-    } catch (e) {
-      output.value += "خطأ أثناء الحفظ: $e\n";
-    }
-  }
-
-  Future<void> openCode() async {
-    FilePickerResult? result;
-    try {
-      if (Platform.isAndroid) {
-        result = await FilePicker.platform.pickFiles(type: FileType.any);
-      } else {
-        result = await FilePicker.platform.pickFiles(
-          type: FileType.custom,
-          allowedExtensions: ['alif', "aliflib", "الف"],
-        );
-      }
-
-      if (result != null && result.files.single.path != null) {
-        final path = result.files.single.path!;
-        final file = File(path);
-        final code = await file.readAsString();
-        setState(() {
-          controller.text = code;
-          currentFilePath = path;
-        });
-      }
-    } catch (e) {
-      output.value += "خطأ أثناء الفتح: $e\n";
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -184,100 +132,14 @@ class _AlifRunnerState extends State<AlifRunner> {
             children: [
               Padding(
                 padding: const EdgeInsets.only(top: 10, right: 10, left: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(
-                            LucideIcons.folderOpen,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          onPressed: openCode,
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            LucideIcons.save,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          onPressed: () => saveCode(
-                            controller.text,
-                            currentFilePath
-                                ?.split('/')
-                                .last
-                                .replaceAll('.alif', '')
-                                .replaceAll('.aliflib', '')
-                                .replaceAll('.الف', ''),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            LucideIcons.play,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          onPressed: () => {
-                            output.value = '',
-                            runAlifCode(),
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              builder: (context) => Terminal(
-                                inputController: inputController,
-                                output: output,
-                                alifBinPath: alifBinPath,
-                                runningProcess: runningProcess,
-                                runAlifCode: runAlifCode,
-                                onClearOutput: () => output.value = '',
-                                onSendInput: (input) {
-                                  runningProcess?.stdin.writeln(input);
-                                  output.value += "$input\n";
-                                  inputController.clear();
-                                },
-                              ),
-                            ),
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            LucideIcons.terminal,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          onPressed: () {
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              builder: (context) => Terminal(
-                                inputController: inputController,
-                                output: output,
-                                alifBinPath: alifBinPath,
-                                runningProcess: runningProcess,
-                                runAlifCode: runAlifCode,
-                                onClearOutput: () => output.value = '',
-                                onSendInput: (input) {
-                                  runningProcess?.stdin.writeln(input);
-                                  output.value += "$input\n";
-                                  inputController.clear();
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    Text(
-                      currentFilePath?.split('/').last ?? "مُحرر طيف",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: currentFilePath != null ? 15 : 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                child: AlifAppBar(
+                  controller: controller,
+                  currentFilePath: currentFilePath,
+                  inputController: inputController,
+                  output: output,
+                  alifBinPath: alifBinPath,
+                  runningProcess: runningProcess,
+                  runAlifCode: runAlifCode,
                 ),
               ),
               IDE(controller: controller, focusNode: editorFocus),
