@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:alifeditor/widgets/Highlighter.dart' as highlighter;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class IDE extends StatefulWidget {
   const IDE({super.key, required this.controller, required this.focusNode});
@@ -14,8 +15,19 @@ class _IDEState extends State<IDE> {
   @override
   void initState() {
     super.initState();
+    loadSettings();
     widget.controller.addListener(() {
       setState(() {});
+    });
+  }
+
+  bool enableSyntaxHighlighting = false;
+
+  void loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedSettings = prefs.getBool('enable_syntax_highlighting');
+    setState(() {
+      enableSyntaxHighlighting = savedSettings ?? false;
     });
   }
 
@@ -28,7 +40,6 @@ class _IDEState extends State<IDE> {
     ).join('\n');
 
     final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
 
     final mainstyle = TextStyle(
       fontSize: 15,
@@ -54,30 +65,25 @@ class _IDEState extends State<IDE> {
                     child: Stack(
                       alignment: Alignment.topRight,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 3),
-                          child: ValueListenableBuilder<TextEditingValue>(
-                            valueListenable: widget.controller,
-                            builder: (context, value, _) {
-                              return RichText(
-                                text: TextSpan(
-                                  children: highlighter.alifHighlight(
-                                    value.text,
+                        if (!enableSyntaxHighlighting)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 3),
+                            child: ValueListenableBuilder<TextEditingValue>(
+                              valueListenable: widget.controller,
+                              builder: (context, value, _) {
+                                return RichText(
+                                  text: TextSpan(
+                                    children: highlighter.alifHighlight(
+                                      value.text,
+                                    ),
+                                    style: mainstyle,
                                   ),
-                                  style: mainstyle.copyWith(
-                                    height: screenHeight > 700
-                                        ? screenWidth < 1200
-                                              ? screenHeight / 850
-                                              : screenHeight / 510
-                                        : null,
-                                  ),
-                                ),
-                                textAlign: TextAlign.right,
-                                textDirection: TextDirection.rtl,
-                              );
-                            },
+                                  textAlign: TextAlign.right,
+                                  textDirection: TextDirection.rtl,
+                                );
+                              },
+                            ),
                           ),
-                        ),
 
                         TextField(
                           controller: widget.controller,
@@ -86,12 +92,9 @@ class _IDEState extends State<IDE> {
                           textAlign: TextAlign.right,
                           textDirection: TextDirection.rtl,
                           style: mainstyle.copyWith(
-                            color: Colors.transparent,
-                            letterSpacing: screenHeight > 700
-                                ? screenWidth < 1200
-                                      ? -screenWidth / 1200
-                                      : -screenWidth / 2000
-                                : null,
+                            color: enableSyntaxHighlighting
+                                ? Colors.white
+                                : Colors.transparent,
                           ),
                           cursorColor: Colors.white,
                           decoration: InputDecoration(

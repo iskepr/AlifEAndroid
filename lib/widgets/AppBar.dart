@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:alifeditor/widgets/OpenedFiles.dart';
+import 'package:alifeditor/widgets/Settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
@@ -222,12 +223,20 @@ class _AlifAppBarState extends State<AlifAppBar> {
                   ),
                 ],
               ),
-              Text(
-                "مُحرر طيف",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: currentFilePath.value != null ? 15 : 20,
-                  fontWeight: FontWeight.bold,
+              TextButton(
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    builder: (context) => Settings(),
+                  );
+                },
+                child: Text(
+                  "مُحرر طيف",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
