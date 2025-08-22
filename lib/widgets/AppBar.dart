@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:alifeditor/widgets/OpenedFiles.dart';
-import 'package:alifeditor/widgets/Settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
@@ -224,12 +223,7 @@ class _AlifAppBarState extends State<AlifAppBar> {
                 ],
               ),
               TextButton(
-                onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    builder: (context) => Settings(),
-                  );
-                },
+                onPressed: () {},
                 child: Text(
                   "مُحرر طيف",
                   style: TextStyle(

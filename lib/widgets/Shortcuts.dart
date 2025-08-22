@@ -59,6 +59,7 @@ class KeyShortcuts extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
+          reverse: true,
           child: Row(
             children: [
               _buildButton("↹", insert: "    "),

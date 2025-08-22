@@ -118,15 +118,17 @@ List<TextSpan> alifHighlight(String text) {
           } else {
             int pos = 0;
             for (var match in matches) {
-              if (match.start > pos)
+              if (match.start > pos) {
                 spans.add(colored(s.substring(pos, match.start), Colors.green));
+              }
               spans.add(colored("{", Colors.white));
               spans.addAll(alifHighlight(match.group(1)!));
               spans.add(colored("}", Colors.white));
               pos = match.end;
             }
-            if (pos < s.length)
+            if (pos < s.length) {
               spans.add(colored(s.substring(pos), Colors.green));
+            }
           }
         } else {
           spans.add(colored(s, Colors.green));
@@ -153,7 +155,9 @@ List<TextSpan> alifHighlight(String text) {
     // الدوال
     if (i + 1 < text.length && text[i] != ' ' && isWordChar(text[i])) {
       int end = i;
-      while (end < text.length && isWordChar(text[end])) end++;
+      while (end < text.length && isWordChar(text[end])) {
+        end++;
+      }
       if (end < text.length && text[end] == '(') {
         spans.add(colored(text.substring(i, end), Color(0xFFDAB744)));
         spans.add(colored('(', Colors.white));

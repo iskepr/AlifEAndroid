@@ -6,11 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class OpenedFiles extends StatefulWidget {
   const OpenedFiles({
-    Key? key,
+    super.key,
     required this.currentFilePath,
     required this.currentCode,
     required this.output,
-  }) : super(key: key);
+  });
 
   final ValueNotifier<String?> currentFilePath;
   final TextEditingController currentCode;
@@ -33,26 +33,11 @@ class OpenedFilesState extends State<OpenedFiles> {
 
   Future<void> _loadFilesFromStorage() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedFiles = prefs.getString('opened_files');
 
-    if (savedFiles != null) {
-      try {
-        final decoded = jsonDecode(savedFiles);
-        if (decoded is List) {
-          files = decoded.map<Map<String, String>>((item) {
-            return {
-              "Name": item["Name"].toString(),
-              "Path": item["Path"].toString(),
-              "Code": item["Code"].toString(),
-            };
-          }).toList();
-        }
-      } catch (e) {
-        print("خطأ في قراءة البيانات المخزنة: $e");
-      }
-    }
+    // لو دي أول مرة يفتح التطبيق
+    final isFirstRun = prefs.getBool('is_first_run') ?? true;
 
-    if (files.isEmpty) {
+    if (isFirstRun) {
       files = [
         {
           "Name": "الأعداد_الاولية.الف",
@@ -81,11 +66,30 @@ class OpenedFilesState extends State<OpenedFiles> {
         },
       ];
       await _saveFilesToStorage();
+      await prefs.setBool('is_first_run', false); // علم إنه مش أول مرة خلاص
+    } else {
+      // حمل الملفات العادية
+      final savedFiles = prefs.getString('opened_files');
+      if (savedFiles != null) {
+        try {
+          final decoded = jsonDecode(savedFiles);
+          if (decoded is List) {
+            files = decoded.map<Map<String, String>>((item) {
+              return {
+                "Name": item["Name"].toString(),
+                "Path": item["Path"].toString(),
+                "Code": item["Code"].toString(),
+              };
+            }).toList();
+          }
+        } catch (e) {
+          print("خطأ في قراءة البيانات المخزنة: $e");
+        }
+      }
     }
-
-    // افتح أول ملف تلقائي (لو عايز)
-    _openFile(0);
-
+    if (files.isNotEmpty) {
+      _openFile(0);
+    }
     setState(() => _isLoading = false);
   }
 
@@ -94,7 +98,6 @@ class OpenedFilesState extends State<OpenedFiles> {
     await prefs.setString('opened_files', jsonEncode(files));
   }
 
-  /// public method — ينادى من بره (AlifAppBar) عشان يضيف أو يحدث ملف ويحدّث الواجهة فورًا
   void addOrUpdateFile(Map<String, String> file) {
     final existingIndex = files.indexWhere((f) => f['Path'] == file['Path']);
     setState(() {
