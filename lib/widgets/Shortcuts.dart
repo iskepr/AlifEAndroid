@@ -27,17 +27,18 @@ class KeyShortcuts extends StatelessWidget {
 
   Widget _buildButton(String label, {String? insert}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
+      padding: const EdgeInsets.all(1),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF1A2340),
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          minimumSize: const Size(50, 40),
+          padding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
           elevation: 3,
-          textStyle: const TextStyle(fontSize: 18),
+          textStyle: const TextStyle(fontSize: 15),
         ),
         onPressed: () => _insertText(insert ?? label),
         child: Text(label),
@@ -48,7 +49,7 @@ class KeyShortcuts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+      padding: const EdgeInsets.all(5),
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: const Color(0xFF081433),
@@ -62,10 +63,6 @@ class KeyShortcuts extends StatelessWidget {
           reverse: true,
           child: Row(
             children: [
-              _buildButton("↹", insert: "    "),
-              _buildButton("\""),
-              _buildButton("'"),
-              _buildButton(":"),
               _buildButton(","),
               _buildButton("+"),
               _buildButton("-"),
@@ -75,12 +72,16 @@ class KeyShortcuts extends StatelessWidget {
               _buildButton("="),
               _buildButton("^"),
               _buildButton("⏎", insert: "/س"),
-              _buildButton("(", insert: ")"),
-              _buildButton(")", insert: "("),
-              _buildButton("{", insert: "}"),
-              _buildButton("}", insert: "{"),
               _buildButton("[", insert: "]"),
               _buildButton("]", insert: "["),
+              _buildButton("{", insert: "}"),
+              _buildButton("}", insert: "{"),
+              _buildButton("(", insert: ")"),
+              _buildButton(")", insert: "("),
+              _buildButton(":"),
+              _buildButton("\""),
+              _buildButton("'"),
+              _buildButton("↹", insert: "    "),
             ],
           ),
         ),

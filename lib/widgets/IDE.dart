@@ -33,15 +33,27 @@ class _IDEState extends State<IDE> {
           : {'': const TextStyle(color: Colors.transparent)},
     );
 
+    // مزامنة من codeController -> controller
     codeController.addListener(() {
-      if (widget.controller.text != codeController.text) {
-        widget.controller.text = codeController.text;
+      if (widget.controller.text != codeController.text ||
+          widget.controller.selection != codeController.selection) {
+        widget.controller.value = widget.controller.value.copyWith(
+          text: codeController.text,
+          selection: codeController.selection,
+          composing: TextRange.empty,
+        );
       }
     });
 
+    // مزامنة من controller -> codeController
     widget.controller.addListener(() {
-      if (codeController.text != widget.controller.text) {
-        codeController.text = widget.controller.text;
+      if (codeController.text != widget.controller.text ||
+          codeController.selection != widget.controller.selection) {
+        codeController.value = codeController.value.copyWith(
+          text: widget.controller.text,
+          selection: widget.controller.selection,
+          composing: TextRange.empty,
+        );
       }
     });
   }
@@ -65,6 +77,7 @@ class _IDEState extends State<IDE> {
             data: CodeThemeData(styles: {...alifDarkTheme}),
             child: CodeField(
               controller: codeController,
+              focusNode: widget.focusNode,
               textStyle: const TextStyle(
                 fontFamily: 'Tajawal',
                 fontSize: 15,
