@@ -33,7 +33,6 @@ class _IDEState extends State<IDE> {
           : {'': const TextStyle(color: Colors.transparent)},
     );
 
-    // مزامنة من codeController -> controller
     codeController.addListener(() {
       if (widget.controller.text != codeController.text ||
           widget.controller.selection != codeController.selection) {
@@ -45,7 +44,6 @@ class _IDEState extends State<IDE> {
       }
     });
 
-    // مزامنة من controller -> codeController
     widget.controller.addListener(() {
       if (codeController.text != widget.controller.text ||
           codeController.selection != widget.controller.selection) {

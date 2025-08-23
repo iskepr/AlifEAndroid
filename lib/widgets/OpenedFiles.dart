@@ -113,6 +113,21 @@ class OpenedFilesState extends State<OpenedFiles> {
   void _openFile(int fileIndex) async {
     if (fileIndex < 0 || fileIndex >= files.length) return;
 
+    // حفظ الملف الحالي قبل التبديل
+    if (_selectedIndex >= 0 && _selectedIndex < files.length) {
+      final currentFilePath = files[_selectedIndex]["Path"];
+      if (currentFilePath != null && currentFilePath.isNotEmpty) {
+        try {
+          final currentFile = File(currentFilePath);
+          await currentFile.writeAsString(widget.currentCode.text);
+          files[_selectedIndex]["Code"] = widget.currentCode.text;
+        } catch (e) {
+          widget.output.value += "خطأ أثناء حفظ الملف الحالي: $e\n";
+        }
+      }
+    }
+
+    // فتح الملف الجديد
     setState(() {
       _selectedIndex = fileIndex;
       widget.currentFilePath.value = files[fileIndex]["Path"] ?? "";
@@ -159,114 +174,131 @@ class OpenedFilesState extends State<OpenedFiles> {
 
     return SizedBox(
       height: 50,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            reverse: true,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            itemCount: files.length,
-            itemBuilder: (context, i) {
-              final sel = _selectedIndex == i;
-              return Container(
-                margin: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  border: sel
-                      ? Border.all(color: const Color(0x509F45D3))
-                      : null,
-                  boxShadow: sel
-                      ? [
-                          BoxShadow(
-                            color: Colors.purpleAccent.withOpacity(0.5),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
-                        ]
-                      : [],
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        reverse: true,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        itemCount: files.length + 1,
+        itemBuilder: (context, i) {
+          if (i == files.length) {
+            // زر انشاء ملف جديد
+            return Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(15),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(15),
+                onTap: () {
+                  final newFile = {
+                    "Name": "ملف_جديد_${files.length + 1}.الف",
+                    "Path": "",
+                    "Code": "",
+                  };
+                  setState(() {
+                    files.add(newFile);
+                    _selectedIndex = files.length - 1;
+                    widget.currentFilePath.value = "";
+                    widget.currentCode.clear();
+                  });
+                  _saveFilesToStorage();
+                },
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Icon(Icons.add, color: Colors.white),
                 ),
-                child: Material(
-                  color: sel ? const Color(0x10FFFFFF) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(15),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(15),
-                    onTap: () => _openFile(i),
-                    onLongPress: () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => Directionality(
-                          textDirection: TextDirection.rtl,
-                          child: AlertDialog(
-                            backgroundColor: const Color(0xFF081433),
-                            title: Text(
-                              'تأكيد الحذف',
-                              textAlign: TextAlign.right,
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            content: Text(
-                              'هل أنت متأكد من حذف الملف "${files[i]["Name"]}"؟',
-                              textAlign: TextAlign.right,
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(false),
-                                child: Text('لا'),
-                              ),
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(true),
-                                child: Text('نعم'),
-                              ),
-                            ],
+              ),
+            );
+          }
+          final sel = _selectedIndex == i;
+          return Container(
+            margin: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              border: sel ? Border.all(color: const Color(0x509F45D3)) : null,
+              boxShadow: sel
+                  ? [
+                      BoxShadow(
+                        color: Colors.purpleAccent.withOpacity(0.5),
+                        blurRadius: 5,
+                        offset: const Offset(0, 0),
+                      ),
+                    ]
+                  : [],
+            ),
+            child: Material(
+              color: sel ? const Color(0x10FFFFFF) : Colors.transparent,
+              borderRadius: BorderRadius.circular(15),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(15),
+                onTap: () => _openFile(i),
+                onLongPress: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => Directionality(
+                      textDirection: TextDirection.rtl,
+                      child: AlertDialog(
+                        backgroundColor: const Color(0xFF081433),
+                        title: Text(
+                          'تأكيد الحذف',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        content: Text(
+                          'هل أنت متأكد من حذف الملف "${files[i]["Name"]}"؟',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: Text('لا'),
                           ),
-                        ),
-                      );
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: Text('نعم'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
 
-                      if (confirmed == true) {
-                        setState(() {
-                          files.removeAt(i);
-                          if (_selectedIndex == i) {
-                            if (files.isNotEmpty) {
-                              _selectedIndex = 0;
-                              widget.currentFilePath.value =
-                                  files[0]["Path"] ?? "";
-                              widget.currentCode.text = files[0]["Code"] ?? "";
-                            } else {
-                              _selectedIndex = -1;
-                              widget.currentFilePath.value = null;
-                              widget.currentCode.clear();
-                            }
-                          } else if (_selectedIndex > i) {
-                            _selectedIndex--;
-                          }
-                        });
-
-                        await _saveFilesToStorage();
+                  if (confirmed == true) {
+                    setState(() {
+                      files.removeAt(i);
+                      if (_selectedIndex == i) {
+                        if (files.isNotEmpty) {
+                          _selectedIndex = 0;
+                          widget.currentFilePath.value = files[0]["Path"] ?? "";
+                          widget.currentCode.text = files[0]["Code"] ?? "";
+                        } else {
+                          _selectedIndex = -1;
+                          widget.currentFilePath.value = null;
+                          widget.currentCode.clear();
+                        }
+                      } else if (_selectedIndex > i) {
+                        _selectedIndex--;
                       }
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: Text(
-                        files[i]["Name"]!,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: sel ? FontWeight.w500 : FontWeight.normal,
-                        ),
-                      ),
+                    });
+
+                    await _saveFilesToStorage();
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Text(
+                    files[i]["Name"]!,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: sel ? FontWeight.w500 : FontWeight.normal,
                     ),
                   ),
                 ),
-              );
-            },
-          ),
-        ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

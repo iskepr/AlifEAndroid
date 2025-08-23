@@ -34,7 +34,6 @@ class AlifAppBar extends StatefulWidget {
 }
 
 class _AlifAppBarState extends State<AlifAppBar> {
-  // مفتاح للوصول لحالة OpenedFiles وتعديل القائمة مباشرة
   final GlobalKey<OpenedFilesState> _openedFilesKey =
       GlobalKey<OpenedFilesState>();
 
@@ -236,7 +235,6 @@ class _AlifAppBarState extends State<AlifAppBar> {
             ],
           ),
 
-          // مرّر المفتاح هنا
           OpenedFiles(
             key: _openedFilesKey,
             currentFilePath: currentFilePath,
