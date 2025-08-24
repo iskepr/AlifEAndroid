@@ -28,20 +28,26 @@ class KeyShortcuts extends StatelessWidget {
   Widget _buildButton(String label, {String? insert}) {
     return Padding(
       padding: const EdgeInsets.all(1),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF1A2340),
-          foregroundColor: Colors.white,
-          minimumSize: const Size(40, 30),
-          padding: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          elevation: 3,
-          textStyle: const TextStyle(fontSize: 15),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          minWidth: 0,
+          maxWidth: 43,
+          maxHeight: 30,
         ),
-        onPressed: () => _insertText(insert ?? label),
-        child: Text(label),
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0x601A2340),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            textStyle: const TextStyle(fontSize: 18),
+          ),
+          onPressed: () => _insertText(insert ?? label),
+          child: Text(label, textAlign: TextAlign.center),
+        ),
       ),
     );
   }
@@ -49,43 +55,35 @@ class KeyShortcuts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(5),
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFF081433),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      width: MediaQuery.of(context).size.width - 10,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          reverse: true,
-          child: Row(
-            children: [
-              _buildButton("⏎", insert: "/س"),
-              _buildButton("[", insert: "]"),
-              _buildButton("]", insert: "["),
-              _buildButton("{", insert: "}"),
-              _buildButton("}", insert: "{"),
-              _buildButton(","),
-              _buildButton("+"),
-              _buildButton("-"),
-              _buildButton("\\"),
-              _buildButton("*"),
-              _buildButton("_"),
-              _buildButton("^"),
-              _buildButton("(", insert: ")"),
-              _buildButton(")", insert: "("),
-              _buildButton("<", insert: ">"),
-              _buildButton(">", insert: "<"),
-              _buildButton("="),
-              _buildButton(":"),
-              _buildButton("\""),
-              _buildButton("'"),
-              _buildButton("↹", insert: "    "),
-            ],
-          ),
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        reverse: true,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            _buildButton("⏎", insert: "/س"),
+            _buildButton("[", insert: "]"),
+            _buildButton("]", insert: "["),
+            _buildButton("{", insert: "}"),
+            _buildButton("}", insert: "{"),
+            _buildButton(","),
+            _buildButton("+"),
+            _buildButton("-"),
+            _buildButton("\\"),
+            _buildButton("*"),
+            _buildButton("_"),
+            _buildButton("^"),
+            _buildButton("(", insert: ")"),
+            _buildButton(")", insert: "("),
+            _buildButton("<", insert: ">"),
+            _buildButton(">", insert: "<"),
+            _buildButton("="),
+            _buildButton(":"),
+            _buildButton("'"),
+            _buildButton('"'),
+            _buildButton("↹", insert: "    "),
+          ],
         ),
       ),
     );
