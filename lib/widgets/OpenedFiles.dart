@@ -9,33 +9,45 @@ class OpenedFiles extends StatefulWidget {
     required this.currentFilePath,
     required this.currentCode,
     required this.output,
+    required this.selectedFile,
+    this.onFileSelected,
   });
 
   final ValueNotifier<String?> currentFilePath;
   final TextEditingController currentCode;
   final ValueNotifier<String> output;
+  final int selectedFile;
+  final ValueChanged<int>? onFileSelected;
 
   @override
   OpenedFilesState createState() => OpenedFilesState();
 }
 
 class OpenedFilesState extends State<OpenedFiles> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
   List<Map<String, String>> files = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.selectedFile;
     _loadFilesFromStorage();
+  }
+
+  @override
+  void didUpdateWidget(OpenedFiles oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedFile != _selectedIndex) {
+      _selectedIndex = widget.selectedFile;
+    }
   }
 
   Future<void> _loadFilesFromStorage() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // لو دي أول مرة يفتح التطبيق
+    // اول فتح للتطبيق
     final isFirstRun = prefs.getBool('is_first_run') ?? true;
-
     if (isFirstRun) {
       files = [
         {
@@ -65,9 +77,9 @@ class OpenedFilesState extends State<OpenedFiles> {
         },
       ];
       await _saveFilesToStorage();
-      await prefs.setBool('is_first_run', false); // علم إنه مش أول مرة خلاص
+      await prefs.setBool('is_first_run', false);
     } else {
-      // حمل الملفات العادية
+      // عرض الملفات المفتوحة سابقا
       final savedFiles = prefs.getString('opened_files');
       if (savedFiles != null) {
         try {
@@ -86,9 +98,7 @@ class OpenedFilesState extends State<OpenedFiles> {
         }
       }
     }
-    if (files.isNotEmpty) {
-      _openFile(0);
-    }
+    if (files.isNotEmpty) _openFile(0);
     setState(() => _isLoading = false);
   }
 
@@ -132,6 +142,7 @@ class OpenedFilesState extends State<OpenedFiles> {
       widget.currentFilePath.value = files[fileIndex]["Path"] ?? "";
       widget.currentCode.text = files[fileIndex]["Code"] ?? "";
     });
+    if (widget.onFileSelected != null) widget.onFileSelected!(fileIndex);
 
     if (files[fileIndex]["Path"] != null &&
         files[fileIndex]["Path"]!.isNotEmpty) {

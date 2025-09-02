@@ -35,6 +35,8 @@ class AlifAppBar extends StatefulWidget {
 }
 
 class _AlifAppBarState extends State<AlifAppBar> {
+  final ValueNotifier<int> _selectedFile = ValueNotifier<int>(0);
+
   final GlobalKey<OpenedFilesState> _openedFilesKey =
       GlobalKey<OpenedFilesState>();
 
@@ -126,6 +128,9 @@ class _AlifAppBarState extends State<AlifAppBar> {
             "Name": fileName,
             "Path": path,
             "Code": code,
+          });
+          setState(() {
+            _selectedFile.value = filesList.length - 1;
           });
         }
       } catch (e) {
@@ -247,6 +252,10 @@ class _AlifAppBarState extends State<AlifAppBar> {
             currentFilePath: currentFilePath,
             currentCode: controller,
             output: output,
+            selectedFile: _selectedFile.value,
+            onFileSelected: (index) {
+              _selectedFile.value = index;
+            },
           ),
         ],
       ),
