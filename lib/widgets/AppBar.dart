@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:alifeditor/pages/About.dart';
 import 'package:alifeditor/widgets/OpenedFiles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:file_saver/file_saver.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import './terminal.dart';
+import '../pages/Terminal.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class AlifAppBar extends StatefulWidget {
@@ -222,7 +223,13 @@ class _AlifAppBarState extends State<AlifAppBar> {
                 ],
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (context) => About(),
+                  );
+                },
                 child: Text(
                   "مُحرر طيف",
                   style: TextStyle(

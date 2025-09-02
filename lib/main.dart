@@ -46,7 +46,7 @@ class _AlifRunnerState extends State<AlifRunner> {
     try {
       final libDir = await platform.invokeMethod<String>('getNativeLibDir');
       alifBinPath = "$libDir/libalif.so";
-      output.value += "تم تحميل لغة ألف اصدار 5.0.0\n";
+      output.value += "تم تحميل لغة ألف اصدار 5.1.0\n";
     } catch (e, s) {
       output.value += "خطأ أثناء جلب مسار لغة ألف: $e\n$s";
     }
