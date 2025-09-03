@@ -35,7 +35,7 @@ class AlifAppBar extends StatefulWidget {
 }
 
 class _AlifAppBarState extends State<AlifAppBar> {
-  final ValueNotifier<int> _selectedFile = ValueNotifier<int>(0);
+  final ValueNotifier<int> _selectedFile = ValueNotifier<int>(-1);
 
   final GlobalKey<OpenedFilesState> _openedFilesKey =
       GlobalKey<OpenedFilesState>();

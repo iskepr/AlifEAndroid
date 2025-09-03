@@ -73,6 +73,7 @@ class KeyShortcuts extends StatelessWidget {
             _buildButton("^"),
             _buildButton("<", insert: ">"),
             _buildButton(">", insert: "<"),
+            _buildButton("#"),
             _buildButton("+"),
             _buildButton("-"),
             _buildButton("(", insert: ")"),

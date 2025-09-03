@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -52,8 +51,8 @@ class OpenedFilesState extends State<OpenedFiles> {
   void _openFile(int fileIndex) async {
     if (fileIndex < 0 || fileIndex >= files.length) return;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt("last_file", fileIndex);
-    // حفظ الملف الحالي قبل التبديل
+
+    // حفظ الملف الحالي
     if (_selectedIndex >= 0 && _selectedIndex < files.length) {
       try {
         files[_selectedIndex]["Code"] = widget.currentCode.text;
@@ -63,30 +62,40 @@ class OpenedFilesState extends State<OpenedFiles> {
       }
     }
 
-    // فتح الملف الجديد
-    setState(() {
-      _selectedIndex = fileIndex;
-      widget.currentFilePath.value = files[fileIndex]["Path"] ?? "";
-      widget.currentCode.text = files[fileIndex]["Code"] ?? "";
-    });
-    if (widget.onFileSelected != null) widget.onFileSelected!(fileIndex);
+    // تغيير المؤشر الأول قبل أي setState
+    _selectedIndex = fileIndex;
+    await prefs.setInt("last_file", fileIndex);
 
-    if (files[fileIndex]["Path"] != null &&
-        files[fileIndex]["Path"]!.isNotEmpty) {
-      try {
-        final file = File(files[fileIndex]["Path"]!);
-        if (await file.exists()) {
-          final code = await file.readAsString();
-          setState(() {
-            widget.currentCode.text = code;
-            files[fileIndex]["Code"] = code;
-          });
-        }
-      } catch (e) {
-        widget.output.value += "خطأ أثناء فتح الملف: $e\n";
-      }
+    final selectedFile = files[fileIndex];
+    widget.currentCode.clear();
+    widget.currentFilePath.value = selectedFile["Path"] ?? "";
+
+    setState(() {});
+
+    // القرائة من الملف
+    // if (selectedFile["Path"] != null && selectedFile["Path"]!.isNotEmpty) {
+    //   try {
+    //     final file = File(selectedFile["Path"]!);
+    //     if (await file.exists()) {
+    //       final code = await file.readAsString();
+
+    //       widget.currentCode.text = code;
+    //       selectedFile["Code"] = code;
+    //     } else {
+    //       widget.currentCode.text = selectedFile["Code"] ?? "";
+    //     }
+    //   } catch (e) {
+    //     widget.output.value += "خطأ أثناء فتح الملف: $e\n";
+    //     widget.currentCode.text = selectedFile["Code"] ?? "";
+    //   }
+    // } else {}
+    widget.currentCode.text = selectedFile["Code"] ?? "";
+
+    await _saveFilesToStorage();
+
+    if (widget.onFileSelected != null) {
+      widget.onFileSelected!(fileIndex);
     }
-    _saveFilesToStorage();
   }
 
   Future<void> _loadFilesFromStorage() async {
