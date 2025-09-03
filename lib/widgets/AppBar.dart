@@ -55,7 +55,7 @@ class _AlifAppBarState extends State<AlifAppBar> {
         final bytes = Uint8List.fromList(utf8.encode(code));
 
         final path = await FileSaver.instance.saveAs(
-          name: fileName ?? "شفرة",
+          name: (fileName == null || fileName.isEmpty) ? 'شفرة' : fileName,
           bytes: bytes,
           fileExtension: "alif",
           mimeType: MimeType.other,

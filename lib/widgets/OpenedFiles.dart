@@ -78,6 +78,13 @@ class OpenedFilesState extends State<OpenedFiles> {
       ];
       await _saveFilesToStorage();
       await prefs.setBool('is_first_run', false);
+      if (files.isNotEmpty) {
+        setState(() {
+          _selectedIndex = 0;
+          widget.currentFilePath.value = files[0]["Path"] ?? "";
+          widget.currentCode.text = files[0]["Code"] ?? "";
+        });
+      }
     } else {
       // عرض الملفات المفتوحة سابقا
       final savedFiles = prefs.getString('opened_files');
@@ -97,14 +104,20 @@ class OpenedFilesState extends State<OpenedFiles> {
           print("خطأ في قراءة البيانات المخزنة: $e");
         }
       }
+
+      // افتح أول ملف محفوظ
+      if (files.isNotEmpty) {
+        _openFile(0);
+      }
     }
-    if (files.isNotEmpty) _openFile(0);
+
     setState(() => _isLoading = false);
   }
 
   Future<void> _saveFilesToStorage() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('opened_files', jsonEncode(files));
+    final encoded = jsonEncode(files);
+    await prefs.setString('opened_files', encoded);
   }
 
   void addOrUpdateFile(Map<String, String> file) {
@@ -122,17 +135,13 @@ class OpenedFilesState extends State<OpenedFiles> {
   void _openFile(int fileIndex) async {
     if (fileIndex < 0 || fileIndex >= files.length) return;
 
-    // حفظ الملف الحالي قبل التبديل
+    // حفظ الملف الحالي قبل التبديل ------------------
     if (_selectedIndex >= 0 && _selectedIndex < files.length) {
-      final currentFilePath = files[_selectedIndex]["Path"];
-      if (currentFilePath != null && currentFilePath.isNotEmpty) {
-        try {
-          final currentFile = File(currentFilePath);
-          await currentFile.writeAsString(widget.currentCode.text);
-          files[_selectedIndex]["Code"] = widget.currentCode.text;
-        } catch (e) {
-          widget.output.value += "خطأ أثناء حفظ الملف الحالي: $e\n";
-        }
+      try {
+        files[_selectedIndex]["Code"] = widget.currentCode.text;
+        await _saveFilesToStorage();
+      } catch (e) {
+        widget.output.value += "خطأ أثناء حفظ الملف الحالي: $e\n";
       }
     }
 
