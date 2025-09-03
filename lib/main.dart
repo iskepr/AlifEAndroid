@@ -27,6 +27,8 @@ class _AlifRunnerState extends State<AlifRunner> {
   TextEditingController inputController = TextEditingController();
 
   String? alifBinPath;
+  late String runtimeDir;
+
   final FocusNode editorFocus = FocusNode();
 
   final ValueNotifier<String> output = ValueNotifier("");
@@ -44,8 +46,13 @@ class _AlifRunnerState extends State<AlifRunner> {
     const platform = MethodChannel('alif/native');
 
     try {
-      final libDir = await platform.invokeMethod<String>('getNativeLibDir');
-      alifBinPath = "$libDir/libalif.so";
+      final langDir = await platform.invokeMethod<String>('prepareAlifRuntime');
+      if (langDir == null) {
+        output.value += "خطأ: ملف لغة الف مش متاح!\n";
+        return;
+      }
+
+      alifBinPath = langDir;
       output.value += "تم تحميل لغة ألف اصدار 5.1.0\n";
     } catch (e, s) {
       output.value += "خطأ أثناء جلب مسار لغة ألف: $e\n$s";
@@ -54,7 +61,7 @@ class _AlifRunnerState extends State<AlifRunner> {
 
   Future<void> runAlifCode() async {
     if (alifBinPath == null) {
-      output.value += "لغة ألف ليست متاحه حتى الان!\n";
+      output.value += "خطأ: لغة الف ليست متاحة\n";
       return;
     }
 
@@ -63,11 +70,14 @@ class _AlifRunnerState extends State<AlifRunner> {
       final scriptFile = File('${tempDir.path}/code.alif');
       await scriptFile.writeAsString(controller.text);
 
+      final libFile = File(alifBinPath!);
+      await Process.run('chmod', ['755', libFile.path]);
+
       final libDir = alifBinPath!.replaceAll('/libalif.so', '');
 
       final process = await Process.start(
-        alifBinPath!,
-        [scriptFile.path],
+        libFile.path,
+        ["-ص", controller.text],
         environment: {'LD_LIBRARY_PATH': libDir},
       );
 
@@ -85,7 +95,7 @@ class _AlifRunnerState extends State<AlifRunner> {
 
       process.exitCode.then((code) {
         if (code != 0) {
-          output.value += "حدث خطأ في اللغة او الشفرة\n";
+          output.value += "حدث خطأ في اللغة أو الشفرة\n";
         }
       });
     } catch (e, s) {
@@ -99,7 +109,7 @@ class _AlifRunnerState extends State<AlifRunner> {
       child: Scaffold(
         backgroundColor: const Color(0xFF081433),
         body: DecoratedBox(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             image: DecorationImage(
               image: AssetImage("assets/Background.webp"),
               fit: BoxFit.cover,
