@@ -31,7 +31,7 @@ class KeyShortcuts extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(
           minWidth: 0,
-          maxWidth: 43,
+          maxWidth: 37,
           maxHeight: 30,
         ),
         child: ElevatedButton(
@@ -68,13 +68,13 @@ class KeyShortcuts extends StatelessWidget {
             _buildButton("{", insert: "}"),
             _buildButton("}", insert: "{"),
             _buildButton(","),
-            _buildButton("+"),
-            _buildButton("-"),
             _buildButton("\\"),
             _buildButton("*"),
             _buildButton("^"),
             _buildButton("<", insert: ">"),
             _buildButton(">", insert: "<"),
+            _buildButton("+"),
+            _buildButton("-"),
             _buildButton("(", insert: ")"),
             _buildButton(")", insert: "("),
             _buildButton("_"),

@@ -94,9 +94,7 @@ class _AlifRunnerState extends State<AlifRunner> {
       });
 
       process.exitCode.then((code) {
-        if (code != 0) {
-          output.value += "حدث خطأ في اللغة أو الشفرة\n";
-        }
+        if (code != 0) output.value += "حدث خطأ في الشفرة\n";
       });
     } catch (e, s) {
       output.value += "استثناء أثناء التشغيل: $e\n$s";

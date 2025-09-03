@@ -43,99 +43,17 @@ class OpenedFilesState extends State<OpenedFiles> {
     }
   }
 
-  Future<void> _loadFilesFromStorage() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    // اول فتح للتطبيق
-    final isFirstRun = prefs.getBool('is_first_run') ?? true;
-    if (isFirstRun) {
-      files = [
-        {
-          "Name": "الأعداد_الاولية.الف",
-          "Path": "",
-          "Code": """
-# هذا البرنامج يقوم بطباعة الأعداد الاولية ضمن المدى المعطى له
-دالة هل_اولي(عدد):
-    اذا عدد < 2:
-        ارجع
-    اذا عدد == 2:
-        اطبع(عدد)
-        ارجع
-    اذا ليس عدد \\\\ 2:
-        ارجع
-    لاجل مقسوم في مدى(3, صحيح(\\^عدد) + 1, 2):
-        اذا ليس عدد \\\\ مقسوم:
-            ارجع
-    اطبع(عدد)
-
-اطبع("*- هذا البرنامج يقوم بإيجاد الأعداد الأولية ضمن المدى المدخل له -*")
-ن = صحيح(ادخل("ادخل عدد: "))
-لاجل ب في مدى(ن):
-    هل_اولي(ب)
-اطبع(م"تم إيجاد الاعداد الاولية ضمن العدد { ن }")
-""",
-        },
-      ];
-      await _saveFilesToStorage();
-      await prefs.setBool('is_first_run', false);
-      if (files.isNotEmpty) {
-        setState(() {
-          _selectedIndex = 0;
-          widget.currentFilePath.value = files[0]["Path"] ?? "";
-          widget.currentCode.text = files[0]["Code"] ?? "";
-        });
-      }
-    } else {
-      // عرض الملفات المفتوحة سابقا
-      final savedFiles = prefs.getString('opened_files');
-      if (savedFiles != null) {
-        try {
-          final decoded = jsonDecode(savedFiles);
-          if (decoded is List) {
-            files = decoded.map<Map<String, String>>((item) {
-              return {
-                "Name": item["Name"].toString(),
-                "Path": item["Path"].toString(),
-                "Code": item["Code"].toString(),
-              };
-            }).toList();
-          }
-        } catch (e) {
-          print("خطأ في قراءة البيانات المخزنة: $e");
-        }
-      }
-
-      // افتح أول ملف محفوظ
-      if (files.isNotEmpty) {
-        _openFile(0);
-      }
-    }
-
-    setState(() => _isLoading = false);
-  }
-
   Future<void> _saveFilesToStorage() async {
     final prefs = await SharedPreferences.getInstance();
     final encoded = jsonEncode(files);
     await prefs.setString('opened_files', encoded);
   }
 
-  void addOrUpdateFile(Map<String, String> file) {
-    final existingIndex = files.indexWhere((f) => f['Path'] == file['Path']);
-    setState(() {
-      if (existingIndex >= 0) {
-        files[existingIndex] = file;
-      } else {
-        files.add(file);
-      }
-    });
-    _saveFilesToStorage();
-  }
-
   void _openFile(int fileIndex) async {
     if (fileIndex < 0 || fileIndex >= files.length) return;
-
-    // حفظ الملف الحالي قبل التبديل ------------------
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt("last_file", fileIndex);
+    // حفظ الملف الحالي قبل التبديل
     if (_selectedIndex >= 0 && _selectedIndex < files.length) {
       try {
         files[_selectedIndex]["Code"] = widget.currentCode.text;
@@ -168,6 +86,87 @@ class OpenedFilesState extends State<OpenedFiles> {
         widget.output.value += "خطأ أثناء فتح الملف: $e\n";
       }
     }
+    _saveFilesToStorage();
+  }
+
+  Future<void> _loadFilesFromStorage() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // عرض الملفات المفتوحة سابقا
+    final savedFiles = prefs.getString('opened_files');
+    if (savedFiles != null) {
+      try {
+        final decoded = jsonDecode(savedFiles);
+        if (decoded is List) {
+          files = decoded.map<Map<String, String>>((item) {
+            return {
+              "Name": item["Name"].toString(),
+              "Path": item["Path"].toString(),
+              "Code": item["Code"].toString(),
+            };
+          }).toList();
+        }
+      } catch (e) {
+        print("خطأ في قراءة البيانات المخزنة: $e");
+      }
+    } else {
+      createFile(
+        name: "الأعداد_الاولية.الف",
+        code: """
+# هذا البرنامج يقوم بطباعة الأعداد الاولية ضمن المدى المعطى له
+دالة هل_اولي(عدد):
+    اذا عدد < 2:
+        ارجع
+    اذا عدد == 2:
+        اطبع(عدد)
+        ارجع
+    اذا ليس عدد \\\\ 2:
+        ارجع
+    لاجل مقسوم في مدى(3, صحيح(\\^عدد) + 1, 2):
+        اذا ليس عدد \\\\ مقسوم:
+            ارجع
+    اطبع(عدد)
+
+اطبع("*- هذا البرنامج يقوم بإيجاد الأعداد الأولية ضمن المدى المدخل له -*")
+ن = صحيح(ادخل("ادخل عدد: "))
+لاجل ب في مدى(ن):
+    هل_اولي(ب)
+اطبع(م"تم إيجاد الاعداد الاولية ضمن العدد { ن }")
+""",
+      );
+    }
+
+    final lastFile = prefs.getInt("last_file");
+    if (lastFile != null && lastFile < files.length) {
+      _openFile(lastFile);
+    }
+    setState(() => _isLoading = false);
+  }
+
+  void addOrUpdateFile(Map<String, String> file) {
+    final existingIndex = files.indexWhere((f) => f['Path'] == file['Path']);
+    setState(() {
+      if (existingIndex >= 0) {
+        files[existingIndex] = file;
+      } else {
+        files.add(file);
+      }
+    });
+    _saveFilesToStorage();
+  }
+
+  void createFile({String name = "", String code = ""}) {
+    final newFile = {
+      "Name": name.isEmpty ? "ملف_جديد_${files.length + 1}.الف" : name,
+      "Path": "",
+      "Code": code,
+    };
+    setState(() {
+      files.add(newFile);
+      _selectedIndex = files.length - 1;
+      widget.currentFilePath.value = "";
+      widget.currentCode.text = newFile["Code"] ?? "";
+    });
     _saveFilesToStorage();
   }
 
@@ -207,18 +206,7 @@ class OpenedFilesState extends State<OpenedFiles> {
               child: InkWell(
                 borderRadius: BorderRadius.circular(15),
                 onTap: () {
-                  final newFile = {
-                    "Name": "ملف_جديد_${files.length + 1}.الف",
-                    "Path": "",
-                    "Code": "",
-                  };
-                  setState(() {
-                    files.add(newFile);
-                    _selectedIndex = files.length - 1;
-                    widget.currentFilePath.value = "";
-                    widget.currentCode.clear();
-                  });
-                  _saveFilesToStorage();
+                  createFile();
                 },
                 child: const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
