@@ -10,7 +10,6 @@ dependencies:
         sdk: flutter
 
     cupertino_icons: ^1.0.8
-    path_provider: ^2.1.5
     file_picker: ^10.2.0
     lucide_icons_flutter: ^3.0.7
     file_selector: ^1.0.3

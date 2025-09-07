@@ -4,7 +4,6 @@ import 'package:alifeditor/widgets/IDE.dart';
 import 'package:alifeditor/widgets/Shortcuts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
 
 void main() => runApp(
   MaterialApp(
@@ -66,18 +65,13 @@ class _AlifRunnerState extends State<AlifRunner> {
     }
 
     try {
-      final tempDir = await getTemporaryDirectory();
-      final scriptFile = File('${tempDir.path}/code.alif');
-      await scriptFile.writeAsString(controller.text);
-
-      final libFile = File(alifBinPath!);
-      await Process.run('chmod', ['755', libFile.path]);
-
+      final aliflang = File(alifBinPath!);
+      await Process.run('chmod', ['755', aliflang.path]);
       final libDir = alifBinPath!.replaceAll('/libalif.so', '');
 
       final process = await Process.start(
-        libFile.path,
-        ["-ص", controller.text],
+        "/system/bin/linker64",
+        [aliflang.path, "-ص", controller.text],
         environment: {'LD_LIBRARY_PATH': libDir},
       );
 
