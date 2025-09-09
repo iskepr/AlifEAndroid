@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,19 +28,29 @@ class OpenedFilesState extends State<OpenedFiles> {
   List<Map<String, String>> files = [];
   bool _isLoading = true;
 
+  Timer? _autoSaveTimer;
+  bool _hasChanges = false;
+
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.selectedFile;
+    // متابعة أي تعديل على الشفرة
+    widget.currentCode.addListener(() {
+      _hasChanges = true;
+    });
+    _startAutoSave();
     _loadFilesFromStorage();
   }
 
-  @override
-  void didUpdateWidget(OpenedFiles oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.selectedFile != _selectedIndex) {
-      _selectedIndex = widget.selectedFile;
-    }
+  void _startAutoSave() {
+    _autoSaveTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_hasChanges && _selectedIndex >= 0 && _selectedIndex < files.length) {
+        files[_selectedIndex]["Code"] = widget.currentCode.text;
+        _saveFilesToStorage();
+        _hasChanges = false;
+      }
+    });
   }
 
   Future<void> _saveFilesToStorage() async {
@@ -62,7 +73,7 @@ class OpenedFilesState extends State<OpenedFiles> {
       }
     }
 
-    // تغيير المؤشر الأول قبل أي setState
+    // تغيير المؤشر قبل الـ setState
     _selectedIndex = fileIndex;
     await prefs.setInt("last_file", fileIndex);
 
@@ -164,6 +175,14 @@ class OpenedFilesState extends State<OpenedFiles> {
     _saveFilesToStorage();
   }
 
+  @override
+  void didUpdateWidget(OpenedFiles oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedFile != _selectedIndex) {
+      _selectedIndex = widget.selectedFile;
+    }
+  }
+
   void createFile({String name = "", String code = ""}) {
     final newFile = {
       "Name": name.isEmpty ? "ملف_جديد_${files.length + 1}.الف" : name,
@@ -181,6 +200,7 @@ class OpenedFilesState extends State<OpenedFiles> {
 
   @override
   void dispose() {
+    _autoSaveTimer?.cancel();
     _saveFilesToStorage();
     super.dispose();
   }
