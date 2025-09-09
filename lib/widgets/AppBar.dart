@@ -20,6 +20,8 @@ class AlifAppBar extends StatefulWidget {
     required this.alifBinPath,
     required this.runningProcess,
     required this.runAlifCode,
+    required this.selectedFile,
+    required this.fontSize,
   });
 
   final TextEditingController controller;
@@ -29,14 +31,14 @@ class AlifAppBar extends StatefulWidget {
   final String? alifBinPath;
   final ValueNotifier<Process?> runningProcess;
   final VoidCallback runAlifCode;
+  final ValueNotifier<int> selectedFile;
+  final ValueNotifier<double> fontSize;
 
   @override
   State<AlifAppBar> createState() => _AlifAppBarState();
 }
 
 class _AlifAppBarState extends State<AlifAppBar> {
-  final ValueNotifier<int> _selectedFile = ValueNotifier<int>(-1);
-
   final GlobalKey<OpenedFilesState> _openedFilesKey =
       GlobalKey<OpenedFilesState>();
 
@@ -49,6 +51,7 @@ class _AlifAppBarState extends State<AlifAppBar> {
     String? alifBinPath = widget.alifBinPath;
     ValueNotifier<Process?> runningProcess = widget.runningProcess;
     VoidCallback runAlifCode = widget.runAlifCode;
+    ValueNotifier<int> selectedFile = widget.selectedFile;
 
     Future<void> saveCode(String code, String? fileName) async {
       try {
@@ -130,7 +133,7 @@ class _AlifAppBarState extends State<AlifAppBar> {
             "Code": code,
           });
           setState(() {
-            _selectedFile.value = filesList.length - 1;
+            selectedFile.value = filesList.length - 1;
           });
         }
       } catch (e) {
@@ -232,7 +235,7 @@ class _AlifAppBarState extends State<AlifAppBar> {
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
-                    builder: (context) => About(),
+                    builder: (context) => About(fontSize: widget.fontSize),
                   );
                 },
                 child: Text(
@@ -252,9 +255,9 @@ class _AlifAppBarState extends State<AlifAppBar> {
             currentFilePath: currentFilePath,
             currentCode: controller,
             output: output,
-            selectedFile: _selectedFile.value,
+            selectedFile: selectedFile.value,
             onFileSelected: (index) {
-              _selectedFile.value = index;
+              selectedFile.value = index;
             },
           ),
         ],

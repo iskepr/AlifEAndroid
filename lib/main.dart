@@ -4,6 +4,7 @@ import 'package:alifeditor/widgets/IDE.dart';
 import 'package:alifeditor/widgets/Shortcuts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() => runApp(
   MaterialApp(
@@ -22,28 +23,35 @@ class AlifRunner extends StatefulWidget {
 }
 
 class _AlifRunnerState extends State<AlifRunner> {
-  TextEditingController controller = TextEditingController(text: "");
-  TextEditingController inputController = TextEditingController();
-
-  String? alifBinPath;
-  late String runtimeDir;
-
+  TextEditingController code = TextEditingController(text: "");
   final FocusNode editorFocus = FocusNode();
-
   final ValueNotifier<String> output = ValueNotifier("");
+  TextEditingController inputController = TextEditingController();
   final ValueNotifier<Process?> runningProcess = ValueNotifier(null);
-
   final ValueNotifier<String?> currentFilePath = ValueNotifier(null);
+
+  final ValueNotifier<int> selectedFile = ValueNotifier<int>(-1);
+  final ValueNotifier<double> fontSize = ValueNotifier<double>(15);
 
   @override
   void initState() {
     super.initState();
+    _loadSavedFontSize();
     setupAlif();
   }
 
+  Future<void> _loadSavedFontSize() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedFontSize = prefs.getDouble('EditorFontSize');
+    if (savedFontSize != null) {
+      fontSize.value = savedFontSize;
+    }
+  }
+
+  String? alifBinPath;
+  late String runtimeDir;
   Future<void> setupAlif() async {
     const platform = MethodChannel('alif/native');
-
     try {
       final langDir = await platform.invokeMethod<String>('prepareAlifRuntime');
       if (langDir == null) {
@@ -71,22 +79,18 @@ class _AlifRunnerState extends State<AlifRunner> {
 
       final process = await Process.start(
         "/system/bin/linker64",
-        [aliflang.path, "-ص", controller.text],
+        [aliflang.path, "-ص", code.text],
         environment: {'LD_LIBRARY_PATH': libDir},
       );
-
       runningProcess.value = process;
-
       process.stdout.transform(SystemEncoding().decoder).listen((data) {
         output.value += data;
       });
-
       process.stderr.transform(SystemEncoding().decoder).listen((data) {
         if (!data.toLowerCase().contains("warning")) {
           output.value += "خطأ: $data";
         }
       });
-
       process.exitCode.then((code) {
         if (code != 0) output.value += "حدث خطأ في الشفرة\n";
       });
@@ -111,16 +115,18 @@ class _AlifRunnerState extends State<AlifRunner> {
           child: Column(
             children: [
               AlifAppBar(
-                controller: controller,
+                controller: code,
                 currentFilePath: currentFilePath,
                 inputController: inputController,
                 output: output,
                 alifBinPath: alifBinPath,
                 runningProcess: runningProcess,
                 runAlifCode: runAlifCode,
+                selectedFile: selectedFile,
+                fontSize: fontSize,
               ),
-              IDE(controller: controller, focusNode: editorFocus),
-              KeyShortcuts(controller: controller, focusNode: editorFocus),
+              IDE(controller: code, focusNode: editorFocus, fontSize: fontSize),
+              KeyShortcuts(controller: code, focusNode: editorFocus),
             ],
           ),
         ),

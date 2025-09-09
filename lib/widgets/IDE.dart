@@ -5,9 +5,15 @@ import 'package:highlight/languages/alif.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class IDE extends StatefulWidget {
-  const IDE({super.key, required this.controller, required this.focusNode});
+  const IDE({
+    super.key,
+    required this.controller,
+    required this.focusNode,
+    required this.fontSize,
+  });
   final TextEditingController controller;
   final FocusNode focusNode;
+  final ValueNotifier<double> fontSize;
 
   @override
   State<IDE> createState() => _IDEState();
@@ -17,9 +23,15 @@ class _IDEState extends State<IDE> {
   bool enableSyntaxHighlighting = false;
   late CodeController codeController;
 
+  late ValueNotifier<double> fontSize;
+  late VoidCallback _fontSizeListener;
+
   @override
   void initState() {
     super.initState();
+    fontSize = widget.fontSize;
+    _fontSizeListener = () => setState(() {});
+    fontSize.addListener(_fontSizeListener);
     _createCodeController();
     loadSettings();
   }
@@ -66,6 +78,13 @@ class _IDEState extends State<IDE> {
   }
 
   @override
+  void dispose() {
+    fontSize.removeListener(_fontSizeListener);
+    codeController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Expanded(
       child: Directionality(
@@ -76,9 +95,9 @@ class _IDEState extends State<IDE> {
             child: CodeField(
               controller: codeController,
               focusNode: widget.focusNode,
-              textStyle: const TextStyle(
+              textStyle: TextStyle(
                 fontFamily: 'Tajawal',
-                fontSize: 15,
+                fontSize: fontSize.value,
                 height: 1.4,
               ),
             ),
