@@ -103,6 +103,8 @@ class _IDEState extends State<IDE> {
                 editorTheme: alifDarkTheme,
                 focusNode: data.focusNode,
                 textDirection: TextDirection.rtl,
+                enableFolding: false,
+                enableGuideLines: false,
               ),
             ),
     );
