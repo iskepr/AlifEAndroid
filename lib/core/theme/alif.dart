@@ -1,5 +1,4 @@
-import 'package:highlight/src/mode.dart';
-import 'package:highlight/src/common_modes.dart';
+import 'package:re_highlight/re_highlight.dart';
 
 final allModes = [
   Mode(ref: '~string'),
