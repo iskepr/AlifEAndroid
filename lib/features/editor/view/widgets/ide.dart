@@ -40,7 +40,6 @@ class _IDEState extends State<IDE> {
   void _initController(IdeData data) {
     codeController = CodeForgeController();
     codeController!.text = data.code.text;
-    codeController!.selection = data.code.selection;
 
     codeController!.addListener(() {
       if (isSyncing) return;
@@ -81,7 +80,6 @@ class _IDEState extends State<IDE> {
           isSyncing = true;
 
           codeController!.text = data.code.text;
-          codeController!.selection = data.code.selection;
 
           isSyncing = false;
         }
