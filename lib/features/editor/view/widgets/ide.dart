@@ -23,12 +23,16 @@ class _IDEState extends State<IDE> {
     super.initState();
     final data = Provider.of<IdeData>(context, listen: false);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      if (data.isReady) {
-        _initController(data);
-      }
-    });
+    if (data.isReady) {
+      _initController(data);
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (data.isReady) {
+          _initController(data);
+        }
+      });
+    }
   }
 
   @override
@@ -79,7 +83,14 @@ class _IDEState extends State<IDE> {
             codeController!.selection != data.code.selection) {
           isSyncing = true;
 
-          codeController!.text = data.code.text;
+          final newText = data.code.text;
+          final wasEmpty = codeController!.text.isEmpty;
+          
+          codeController!.text = newText;
+          
+          if (wasEmpty && newText.isNotEmpty) {
+            setState(() {});
+          }
 
           isSyncing = false;
         }
@@ -95,15 +106,21 @@ class _IDEState extends State<IDE> {
       child: codeController == null
           ? SizedBox(height: 200)
           : Consumer<IdeData>(
-              builder: (context, data, child) => CodeForge(
-                controller: codeController,
-                language: alif,
-                editorTheme: alifDarkTheme,
-                focusNode: data.focusNode,
-                textDirection: TextDirection.rtl,
-                enableFolding: false,
-                enableGuideLines: false,
-              ),
+              builder: (context, data, child) {
+                if (codeController!.text.isEmpty && data.code.text.isNotEmpty) {
+                  return SizedBox(height: 200);
+                }
+                
+                return CodeForge(
+                  controller: codeController,
+                  language: alif,
+                  editorTheme: alifDarkTheme,
+                  focusNode: data.focusNode,
+                  textDirection: TextDirection.rtl,
+                  enableFolding: false,
+                  enableGuideLines: false,
+                );
+              },
             ),
     );
   }
