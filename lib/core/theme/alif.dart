@@ -1,5 +1,4 @@
-import 'package:highlight/src/mode.dart';
-import 'package:highlight/src/common_modes.dart';
+import 'package:re_highlight/re_highlight.dart';
 
 final allModes = [
   Mode(ref: '~string'),
@@ -123,6 +122,7 @@ final alif = Mode(
   },
   aliases: ["الف", "alif", "aliflib"],
   keywords: {
+    "\$pattern": r"[\u0600-\u06FF_][\u0600-\u06FFa-zA-Z0-9_]*|[a-zA-Z_][a-zA-Z0-9_]*|__\w+__",
     "keyword":
         "ادخل صحيح مفاتيح اقصى ادنى طول اضف امسح ادرج مفاتيح عشري مصفوفة اطبع مدى صح هذا عدم خطا خطأ اواذا اوإذا اذا إذا والا وإلا صنف دالة استورد عام لكل نهاية ارجع توقف حاول __تهيئة__ __عرض__ __استدعاء__ __اجمع__ __اجمع_ع__ بينما استمر خلل احذف الزمن الرياضيات نوع",
     "literal": "صح خطا خطأ هذا",

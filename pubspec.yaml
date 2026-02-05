@@ -14,8 +14,7 @@ dependencies:
     shared_preferences: ^2.5.4
     path_provider: ^2.1.5
     permission_handler: ^12.0.1
-    highlight: ^0.7.0
-    flutter_code_editor: ^0.3.5
+    code_forge: ^8.1.2
     url_launcher: ^6.3.2
     input_quantity: ^2.5.2
     provider: ^6.1.5+1

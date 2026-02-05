@@ -1,6 +1,5 @@
 import "package:flutter/material.dart";
-import "package:flutter_code_editor/flutter_code_editor.dart";
-import "package:flutter_code_editor/src/code_modifiers/insertion.dart";
+import "package:code_forge/code_forge.dart";
 import "package:provider/provider.dart";
 import "package:taif/data/ide_data.dart";
 import "package:taif/core/services/files/save_file.dart";
@@ -15,7 +14,7 @@ class IDE extends StatefulWidget {
 }
 
 class _IDEState extends State<IDE> {
-  CodeController? codeController;
+  CodeForgeController? codeController;
 
   bool isSyncing = false;
 
@@ -24,12 +23,16 @@ class _IDEState extends State<IDE> {
     super.initState();
     final data = Provider.of<IdeData>(context, listen: false);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      if (data.isReady) {
-        _initController(data);
-      }
-    });
+    if (data.isReady) {
+      _initController(data);
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (data.isReady) {
+          _initController(data);
+        }
+      });
+    }
   }
 
   @override
@@ -39,20 +42,8 @@ class _IDEState extends State<IDE> {
   }
 
   void _initController(IdeData data) {
-    codeController = CodeController(
-      text: data.code.text,
-      language: alif,
-      modifiers: [
-        const CloseBlockModifier(),
-        const TabModifier(),
-        InsertionCodeModifier.backticks,
-        InsertionCodeModifier.braces,
-        InsertionCodeModifier.brackets,
-        InsertionCodeModifier.doubleQuotes,
-        InsertionCodeModifier.parentheses,
-        InsertionCodeModifier.singleQuotes,
-      ],
-    );
+    codeController = CodeForgeController();
+    codeController!.text = data.code.text;
 
     codeController!.addListener(() {
       if (isSyncing) return;
@@ -92,11 +83,14 @@ class _IDEState extends State<IDE> {
             codeController!.selection != data.code.selection) {
           isSyncing = true;
 
-          codeController!.value = codeController!.value.copyWith(
-            text: data.code.text,
-            selection: data.code.selection,
-            composing: TextRange.empty,
-          );
+          final newText = data.code.text;
+          final wasEmpty = codeController!.text.isEmpty;
+          
+          codeController!.text = newText;
+          
+          if (wasEmpty && newText.isNotEmpty) {
+            setState(() {});
+          }
 
           isSyncing = false;
         }
@@ -109,29 +103,25 @@ class _IDEState extends State<IDE> {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: SingleChildScrollView(
-        child: CodeTheme(
-          data: CodeThemeData(styles: {...alifDarkTheme}),
-          child: codeController == null
-              ? SizedBox(height: 200)
-              : Consumer<IdeData>(
-                  builder: (context, data, child) => CodeField(
-                    gutterStyle: GutterStyle(
-                      width: 70,
-                      showErrors: false,
-                      showFoldingHandles: false,
-                      textAlign: TextAlign.center,
-                    ),
-                    controller: codeController!,
-                    focusNode: data.focusNode,
-                    textStyle: TextStyle(
-                      fontSize: data.fontSize.toDouble(),
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-        ),
-      ),
+      child: codeController == null
+          ? SizedBox(height: 200)
+          : Consumer<IdeData>(
+              builder: (context, data, child) {
+                if (codeController!.text.isEmpty && data.code.text.isNotEmpty) {
+                  return SizedBox(height: 200);
+                }
+                
+                return CodeForge(
+                  controller: codeController,
+                  language: alif,
+                  editorTheme: alifDarkTheme,
+                  focusNode: data.focusNode,
+                  textDirection: TextDirection.rtl,
+                  enableFolding: false,
+                  enableGuideLines: false,
+                );
+              },
+            ),
     );
   }
 }
