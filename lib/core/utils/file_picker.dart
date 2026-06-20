@@ -48,17 +48,6 @@ Future<void> showFileManagerModal(
     return a.path.toLowerCase().compareTo(b.path.toLowerCase());
   });
 
-  String formatFileSize(int bytes) {
-    if (bytes < 1024) return "$bytes بايت";
-    if (bytes < 1024 * 1024) {
-      return "${(bytes / 1024).toStringAsFixed(2)} كيلوبايت";
-    }
-    if (bytes < 1024 * 1024 * 1024) {
-      return "${(bytes / (1024 * 1024)).toStringAsFixed(2)} ميجابايت";
-    }
-    return "${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} جيجابايت";
-  }
-
   if (!context.mounted) return;
 
   final parentPath = directory.parent.path;
@@ -79,6 +68,7 @@ Future<void> showFileManagerModal(
     ),
     child: Column(
       children: [
+        const SizedBox(height: kDefaultPadding * 2),
         Expanded(
           child: items.isNotEmpty
               ? ListView.builder(
@@ -100,8 +90,8 @@ Future<void> showFileManagerModal(
                       ),
                       subtitle: Text(
                         isDir
-                            ? getSafeDirCount(entity.path)
-                            : "الحجم ${formatFileSize(File(entity.path).statSync().size)}",
+                            ? entity.path.getSafeDirCount
+                            : "الحجم ${File(entity.path).statSync().size.formatFileSize}",
                         style: TextStyle(color: context.secondary),
                       ),
                       trailing:
@@ -256,15 +246,4 @@ Widget buildHeader(
       ),
     ],
   );
-}
-
-String getSafeDirCount(String path) {
-  try {
-    final dir = Directory(path);
-    final count = dir.listSync().take(100).length;
-    if (count == 0) return "مجلد فارغ";
-    return count == 100 ? "+100 ملف" : "$count ملف";
-  } catch (e) {
-    return "مجلد محمي";
-  }
 }

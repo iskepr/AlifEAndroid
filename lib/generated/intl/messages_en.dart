@@ -42,6 +42,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "forReadOnly": MessageLookupByLibrary.simpleMessage("For Read Only"),
     "forWrite": MessageLookupByLibrary.simpleMessage("For Write"),
     "ideVersion": MessageLookupByLibrary.simpleMessage("Taif IDE Version"),
+    "info": MessageLookupByLibrary.simpleMessage("Info"),
     "newFile": MessageLookupByLibrary.simpleMessage("New File"),
     "noPath": MessageLookupByLibrary.simpleMessage("No Path"),
     "openFile": MessageLookupByLibrary.simpleMessage("Open File"),
@@ -51,6 +52,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "search": MessageLookupByLibrary.simpleMessage("Search"),
     "settings": MessageLookupByLibrary.simpleMessage("Settings"),
     "share": MessageLookupByLibrary.simpleMessage("Share"),
+    "success": MessageLookupByLibrary.simpleMessage("Success"),
     "successInstallAlifVersion": MessageLookupByLibrary.simpleMessage(
       "Successfully installed Alif version",
     ),

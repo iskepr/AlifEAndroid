@@ -74,50 +74,65 @@ class _IDEViewState extends State<IDEView> {
     }
   }
 
+  bool _isScrolling = false;
+
   @override
   Widget build(BuildContext context) {
     final workspace = context.watch<WorkspaceProvider>();
     final settings = context.watch<SettingsProvider>();
 
-    return CodeForge(
-      // init
-      controller: workspace.codeController,
-      undoController: workspace.undoController,
-      focusNode: workspace.focusNode,
-      language: alif,
-      filePath: workspace.selectedFile.path,
-      keyboardType: settings.get(AppSetting.customKeyboard)
-          ? TextInputType.none
-          : TextInputType.multiline,
-      // features
-      enableFolding: settings.get(AppSetting.enableFolding),
-      enableGuideLines: settings.get(AppSetting.enableGuideLines),
-      enableLocalSuggestions: settings.get(AppSetting.enableSuggestions),
-      lineWrap: settings.get(AppSetting.lineWrap),
-      tabSize: settings.get(AppSetting.tabSize),
-      customCodeSnippets: alifSnippets,
-      findController: workspace.findController,
-      finderBuilder: (context, findController) => PreferredSize(
-        preferredSize: const Size.fromHeight(30),
-        child: SearchView(findController: findController),
+    return Listener(
+      onPointerDown: (event) => _isScrolling = false,
+      onPointerMove: (event) {
+        if (event.delta.distance > 2.0) _isScrolling = true;
+      },
+      onPointerUp: (event) {
+        if (!_isScrolling) {
+          if (settings.get(AppSetting.customKeyboard)) {
+            workspace.toggleKeyboard(enable: true);
+          }
+        }
+      },
+      child: CodeForge(
+        // init
+        controller: workspace.codeController,
+        undoController: workspace.undoController,
+        focusNode: workspace.codeControllerFocus,
+        language: alif,
+        filePath: workspace.selectedFile.path,
+        keyboardType: settings.get(AppSetting.customKeyboard)
+            ? TextInputType.none
+            : TextInputType.multiline,
+        // features
+        enableFolding: settings.get(AppSetting.enableFolding),
+        enableGuideLines: settings.get(AppSetting.enableGuideLines),
+        enableLocalSuggestions: settings.get(AppSetting.enableSuggestions),
+        lineWrap: settings.get(AppSetting.lineWrap),
+        tabSize: settings.get(AppSetting.tabSize),
+        customCodeSnippets: alifSnippets,
+        findController: workspace.findController,
+        finderBuilder: (context, findController) => PreferredSize(
+          preferredSize: const Size.fromHeight(30),
+          child: SearchView(findController: findController),
+        ),
+        // styling
+        editorTheme: alifDarkTheme,
+        textDirection: TextDirection.rtl,
+        innerPadding: const EdgeInsets.only(left: kDefaultPadding * 2),
+        textStyle: TextStyle(
+          fontFamily: settings.get(AppSetting.editorFont),
+          fontSize: settings.get(AppSetting.fontSize),
+          height: Platform.isAndroid ? 1.4 : null,
+        ),
+        gutterStyle: Platform.isAndroid
+            ? GutterStyle(
+                lineNumberStyle: TextStyle(
+                  fontSize: settings.get(AppSetting.fontSize) * 0.95,
+                  fontFamily: settings.get(AppSetting.editorFont),
+                ),
+              )
+            : null,
       ),
-      // styling
-      editorTheme: alifDarkTheme,
-      textDirection: TextDirection.rtl,
-      innerPadding: const EdgeInsets.only(left: kDefaultPadding * 2),
-      textStyle: TextStyle(
-        fontFamily: settings.get(AppSetting.editorFont),
-        fontSize: settings.get(AppSetting.fontSize),
-        height: Platform.isAndroid ? 1.4 : null,
-      ),
-      gutterStyle: Platform.isAndroid
-          ? GutterStyle(
-              lineNumberStyle: TextStyle(
-                fontSize: settings.get(AppSetting.fontSize) * 0.95,
-                fontFamily: settings.get(AppSetting.editorFont),
-              ),
-            )
-          : null,
     );
   }
 

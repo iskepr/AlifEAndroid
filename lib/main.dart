@@ -6,7 +6,7 @@ import "package:shared_preferences/shared_preferences.dart";
 
 import "constants.dart";
 import "core/providers/settings_provider.dart";
-import "core/providers/terminal_provider.dart";
+import "features/terminal/provider/terminal_provider.dart";
 import "core/providers/workspace_provider.dart";
 import "core/theme/colors.dart";
 import "features/editor/view/editor_view.dart";
@@ -22,13 +22,27 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        // Settings Provider
         ChangeNotifierProvider(create: (_) => SettingsProvider(prefs)),
+        // Workspace Provider
+        ChangeNotifierProxyProvider<SettingsProvider, WorkspaceProvider>(
+          create: (context) =>
+              WorkspaceProvider(context.read<SettingsProvider>()),
+          update: (context, settings, workspace) {
+            if (workspace != null) return workspace;
+            return WorkspaceProvider(settings);
+          },
+        ),
+        // Terminal Provider
         ChangeNotifierProxyProvider<SettingsProvider, TerminalProvider>(
           create: (context) =>
               TerminalProvider(context.read<SettingsProvider>()),
-          update: (context, settings, terminal) => TerminalProvider(settings),
+          update: (context, settings, terminal) {
+            if (terminal != null) return terminal;
+            return TerminalProvider(settings);
+          },
         ),
-        ChangeNotifierProvider(create: (_) => WorkspaceProvider()),
+        // Shortcuts Provider
         ChangeNotifierProvider(create: (_) => ShortcutsProvider()),
       ],
       child: const Taif(),
@@ -43,8 +57,11 @@ class Taif extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      locale: const Locale("ar"),
       navigatorKey: navigatorKey,
+      onGenerateTitle: (context) => S.of(context).title,
+
+      // لغة التطبيق
+      locale: const Locale("ar"),
       localizationsDelegates: const [
         S.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -52,9 +69,12 @@ class Taif extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: S.delegate.supportedLocales,
-      onGenerateTitle: (context) => S.of(context).title,
+
+      // الوان التطبيق
       themeMode: ThemeMode.dark,
-      theme: AppThemes.darkTheme,
+      theme: AppThemes.lightTheme,
+      darkTheme: AppThemes.darkTheme,
+
       home: const EditorView(),
     );
   }

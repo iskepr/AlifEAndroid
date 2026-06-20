@@ -1,9 +1,10 @@
 import "dart:io";
+
 import "package:flutter/material.dart";
 
-import "../../constants.dart";
-import "../models/data_typs.dart";
-import "settings_provider.dart";
+import "../../../core/models/data_typs.dart";
+import "../../../core/providers/settings_provider.dart";
+import "../utils/terminal_parser.dart";
 
 class TerminalProvider extends ChangeNotifier {
   late final FocusNode terminalFocus;
@@ -25,16 +26,25 @@ class TerminalProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addOutput(String text, {bool newLine = true, bool? isError}) {
-    final prefix = (isError == true) || text.contains(l10n.error)
-        ? "${l10n.error}: "
-        : (isError == false) || text.contains(l10n.warning)
-        ? "${l10n.warning}: "
-        : "";
-
+  void addOutput(
+    String text, {
+    bool newLine = true,
+    bool? isError,
+    LineType? type,
+  }) {
     if (outputLines.isEmpty) {
-      outputLines.add(TerminalLine(text: "", sessionId: currentSessionId));
+      outputLines.add(
+        TerminalLine(
+          text: "",
+          sessionId: currentSessionId,
+          type: LineType.normal,
+        ),
+      );
     }
+
+    final lineType = getLineType(text, type, isError);
+    final String prefix = lineType[0];
+    final LineType currentType = type ?? lineType[1];
 
     final String lastLineText = outputLines.removeLast().text;
 
@@ -59,18 +69,24 @@ class TerminalProvider extends ChangeNotifier {
           TerminalLine(
             text: processedLine,
             sessionId: currentSessionId,
-            isError: isError,
+            type: currentType,
           ),
         );
       } else {
         if (fullText.endsWith("\n") && processedLine.isEmpty) {
-          outputLines.add(TerminalLine(text: "", sessionId: currentSessionId));
+          outputLines.add(
+            TerminalLine(
+              text: "",
+              sessionId: currentSessionId,
+              type: LineType.normal,
+            ),
+          );
         } else {
           outputLines.add(
             TerminalLine(
               text: processedLine,
               sessionId: currentSessionId,
-              isError: isError,
+              type: currentType,
             ),
           );
         }
@@ -82,13 +98,14 @@ class TerminalProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+
     _settings.runVibration(
-      pattern: isError == true
+      pattern: currentType == LineType.error
           ? [0, 100, 50, 100]
-          : isError == false
+          : currentType == LineType.warning
           ? [0, 100]
           : [0, 50],
-      duration: isError == false ? 100 : 0,
+      duration: currentType == LineType.warning ? 100 : 0,
     );
   }
 

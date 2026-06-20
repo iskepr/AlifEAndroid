@@ -19,6 +19,8 @@
     "replaceWith": "Replace With",
     "error": "Error",
     "warning": "Warning",
+    "success": "Success",
+    "info": "Info",
     "clear": "Clear",
     "cancel": "Cancel",
     "confirm": "Confirm",

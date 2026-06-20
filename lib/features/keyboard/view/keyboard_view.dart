@@ -5,7 +5,7 @@ import "../../../constants.dart";
 import "../../../core/providers/workspace_provider.dart";
 import "../../editor/models/code_controller.dart";
 import "../../editor/models/key_entity.dart";
-import "../data/keyboard_provider.dart"; // تأكد إن ده فيه الـ ShortcutsProvider الجديد
+import "../data/keyboard_provider.dart";
 import "widgets/key_button.dart";
 
 class KeyboardView extends StatefulWidget {
@@ -71,7 +71,7 @@ class _KeyboardViewState extends State<KeyboardView> {
                 IconButton(
                   onPressed: () => workspace.toggleKeyboard(),
                   icon: const Icon(LucideIcons.chevronDown, size: 20),
-                  constraints: const BoxConstraints(maxHeight: 30),
+                  constraints: const BoxConstraints(maxHeight: 30, minWidth: 50),
                 ),
               ],
             ),

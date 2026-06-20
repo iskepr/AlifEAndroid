@@ -40,6 +40,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "forReadOnly": MessageLookupByLibrary.simpleMessage("للقراءة"),
     "forWrite": MessageLookupByLibrary.simpleMessage("للكتابة"),
     "ideVersion": MessageLookupByLibrary.simpleMessage("محرر طيف النسخة"),
+    "info": MessageLookupByLibrary.simpleMessage("معلومات"),
     "newFile": MessageLookupByLibrary.simpleMessage("ملف جديد"),
     "noPath": MessageLookupByLibrary.simpleMessage("لا يوجد مسار"),
     "openFile": MessageLookupByLibrary.simpleMessage("فتح ملف"),
@@ -49,6 +50,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "search": MessageLookupByLibrary.simpleMessage("بحث"),
     "settings": MessageLookupByLibrary.simpleMessage("الإعدادات"),
     "share": MessageLookupByLibrary.simpleMessage("مشاركة"),
+    "success": MessageLookupByLibrary.simpleMessage("نجاح"),
     "successInstallAlifVersion": MessageLookupByLibrary.simpleMessage(
       "تم تثبيت لغة ألف الإصدار",
     ),

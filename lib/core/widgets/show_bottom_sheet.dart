@@ -83,7 +83,7 @@ class _MyBottomSheetState extends State<MyBottomSheet> {
       padding: const EdgeInsets.only(
         left: kMediumPadding,
         right: kMediumPadding,
-        top: 80.0,
+        top: 20.0,
         bottom: kMediumPadding,
       ),
       children: [widget.child],
@@ -169,12 +169,12 @@ Future<T?> showMyBottomSheet<T>({
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
     useSafeArea: true,
-    sheetAnimationStyle: const AnimationStyle(
-      curve: kCurveEaseOutBack,
-      reverseCurve: kCurveEaseOutBack,
-      duration: kAnimationDuration,
-      reverseDuration: kAnimationDuration,
-    ),
+    // sheetAnimationStyle: const AnimationStyle(
+    //   curve: kCurveEaseOutBack,
+    //   reverseCurve: kCurveEaseOutBack,
+    //   duration: kAnimationDuration,
+    //   reverseDuration: kAnimationDuration,
+    // ),
     builder: (context) {
       return Padding(
         padding: EdgeInsets.only(

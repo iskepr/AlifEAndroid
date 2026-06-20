@@ -62,7 +62,7 @@ final String kHomeDir = Platform.isAndroid
     ? "${Platform.environment["HOME"]}"
     : "";
 const String kAlifBin = "الف";
-const String kTempFileName = "ملفkمؤقت.الف";
+const String kTempFileName = "مؤقت.الف";
 const String kLinkerPath = "/system/bin/linker64";
 const String kLibAlifSuffix = "/libalif.so";
 

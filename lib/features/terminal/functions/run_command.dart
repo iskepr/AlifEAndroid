@@ -6,7 +6,7 @@ import "package:provider/provider.dart";
 
 import "../../../constants.dart";
 import "../../../core/providers/settings_provider.dart";
-import "../../../core/providers/terminal_provider.dart";
+import "../provider/terminal_provider.dart";
 import "../../../core/providers/workspace_provider.dart";
 import "handle_commands.dart";
 

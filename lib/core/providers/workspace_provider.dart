@@ -3,6 +3,7 @@ import "dart:io";
 
 import "package:code_forge/code_forge.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
 import "../../constants.dart";
@@ -11,13 +12,16 @@ import "../models/data_typs.dart";
 import "../services/files/open_file.dart";
 import "../services/files/save_file.dart";
 import "../utils/show_message.dart";
+import "settings_provider.dart";
 
 class WorkspaceProvider extends ChangeNotifier {
+  final SettingsProvider _settings;
+
   SharedPreferences? _prefs;
   late final CodeController codeController;
   late final FindController findController;
   late final UndoRedoController undoController;
-  late final FocusNode focusNode;
+  late final FocusNode codeControllerFocus;
 
   List<FileEntity> files = [];
   late FileEntity _selectedFile;
@@ -26,10 +30,10 @@ class WorkspaceProvider extends ChangeNotifier {
   String? workspacePath;
   int lastFile = 0;
 
-  WorkspaceProvider() {
+  WorkspaceProvider(this._settings) {
     codeController = CodeController();
-    focusNode = FocusNode();
-    focusNode.addListener(_onFocusChange);
+    codeControllerFocus = FocusNode();
+    codeControllerFocus.addListener(_onFocusChange);
     findController = FindController(codeController);
     undoController = UndoRedoController();
     _selectedFile = FileEntity.empty();
@@ -62,7 +66,7 @@ class WorkspaceProvider extends ChangeNotifier {
     codeController.dispose();
     findController.dispose();
     undoController.dispose();
-    focusNode.dispose();
+    codeControllerFocus.dispose();
     super.dispose();
   }
 
@@ -193,18 +197,26 @@ class WorkspaceProvider extends ChangeNotifier {
 
   bool isKeyboardEnabled = false;
   void _onFocusChange() {
-    if (isKeyboardEnabled != focusNode.hasFocus) {
-      isKeyboardEnabled = focusNode.hasFocus;
+    if (_settings.get(AppSetting.customKeyboard)) return;
+    if (isKeyboardEnabled != codeControllerFocus.hasFocus) {
+      isKeyboardEnabled = codeControllerFocus.hasFocus;
+      if (isKeyboardEnabled) {
+        SystemChannels.textInput.invokeMethod("TextInput.hide");
+      }
       notifyListeners();
     }
   }
 
-  void toggleKeyboard() {
-    if (focusNode.hasFocus) {
-      focusNode.unfocus();
-    } else {
-      focusNode.requestFocus();
+  void toggleKeyboard({bool? enable}) {
+    if (_settings.get(AppSetting.customKeyboard)) return;
+    isKeyboardEnabled = enable ?? !isKeyboardEnabled;
+    if (isKeyboardEnabled) {
+      SystemChannels.textInput.invokeMethod("TextInput.hide");
+      if (!codeControllerFocus.hasFocus) {
+        codeControllerFocus.requestFocus();
+      }
     }
+    notifyListeners();
   }
 
   void toggleSearch() {
@@ -219,10 +231,10 @@ class WorkspaceProvider extends ChangeNotifier {
         findController.findInputController.text = selectedText;
       }
 
-      Future.microtask(() => findController.findInputFocusNode.requestFocus());
+      findController.findInputFocusNode.unfocus();
     } else {
       findController.clear();
-      focusNode.requestFocus();
+      codeControllerFocus.requestFocus();
     }
     notifyListeners();
   }

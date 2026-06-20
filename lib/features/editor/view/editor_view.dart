@@ -28,9 +28,11 @@ class _EditorViewState extends State<EditorView> {
 
   Future<void> _initializeEditor() async {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await loadFilesFromStorage(context);
       await requestStoragePermission();
       if (!mounted) return;
-      await Future.wait([loadFilesFromStorage(context), setupAlif(context)]);
+      await setupAlif(context);
     });
   }
 
@@ -78,17 +80,16 @@ class _BuiltInKeyboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasFocus = context.select<WorkspaceProvider, bool>(
-      (p) => p.focusNode.hasFocus,
-    );
-
     return SafeArea(
       top: false,
-      bottom: !hasFocus,
+      bottom: !isKeyboardEnabled,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const ShortcutsView(),
+          if (!isKeyboardEnabled)
+            SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
+
           AnimatedSize(
             duration: kAnimationDuration,
             curve: kCurveEaseInOut,

@@ -19,6 +19,8 @@
     "replaceWith": "إستبدال بـ",
     "error": "خطأ",
     "warning": "تحذير",
+    "success": "نجاح",
+    "info": "معلومات",
     "clear": "مسح",
     "cancel": "إلغاء",
     "confirm": "تاكيد",

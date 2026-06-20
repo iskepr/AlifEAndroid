@@ -2,7 +2,7 @@ import "dart:io";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 import "../../../constants.dart";
-import "../../../core/providers/terminal_provider.dart";
+import "../provider/terminal_provider.dart";
 import "../../../core/providers/workspace_provider.dart";
 
 enum BuiltIn { clear, pwd, cd, echo, date, ls, mkdir, touch, rm, help, exit }

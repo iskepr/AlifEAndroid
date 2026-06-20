@@ -27,7 +27,7 @@ class ShortcutsProvider extends ChangeNotifier {
       SymbolData("/"),
       SymbolData("~"),
       SymbolData("`", closing: "`"),
-      SymbolData("_"),
+      SymbolData("=="),
       SymbolData("+"),
     ],
     [
@@ -35,7 +35,7 @@ class ShortcutsProvider extends ChangeNotifier {
       SymbolData('"', closing: '"'),
       SymbolData(":"),
       SymbolData(";"),
-      SymbolData("=="),
+      SymbolData("_"),
       SymbolData("="),
       SymbolData("!="),
       SymbolData("&&"),

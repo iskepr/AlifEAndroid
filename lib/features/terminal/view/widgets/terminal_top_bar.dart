@@ -4,7 +4,7 @@ import "package:lucide_icons_flutter/lucide_icons.dart";
 import "package:provider/provider.dart";
 
 import "../../../../constants.dart";
-import "../../../../core/providers/terminal_provider.dart";
+import "../../provider/terminal_provider.dart";
 import "../../../../core/theme/colors.dart";
 import "../../../../core/theme/text.dart";
 import "../../../../core/utils/show_message.dart";

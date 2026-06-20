@@ -29,5 +29,5 @@ Future<void> openFile(int fileID, BuildContext context) async {
     settings.get(AppSetting.autoSave),
     markDirty: false,
   );
-  workspace.focusNode.requestFocus();
+  workspace.codeControllerFocus.requestFocus();
 }

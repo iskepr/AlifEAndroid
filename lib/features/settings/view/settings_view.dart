@@ -64,7 +64,7 @@ class SettingsView extends StatelessWidget {
                 AppSetting.lineWrap,
                 "النظام",
                 AppSetting.enableVibration,
-                // AppSetting.customKeyboard,
+                AppSetting.customKeyboard,
               ].map((setting) {
                 if (setting is String) {
                   return _buildSectionTitle(context, setting);

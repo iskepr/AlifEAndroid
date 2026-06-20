@@ -5,9 +5,8 @@ import "package:provider/provider.dart";
 
 import "../../../../constants.dart";
 import "../../../../core/models/data_typs.dart";
-import "../../../../core/providers/terminal_provider.dart";
-import "../../../../core/theme/colors.dart";
 import "../../../../core/utils/show_message.dart";
+import "../../provider/terminal_provider.dart";
 
 class TerminalOutputs extends StatelessWidget {
   const TerminalOutputs({super.key});
@@ -96,13 +95,13 @@ class _SessionWidget extends StatelessWidget {
     final List<Widget> widgets = [];
     List<TerminalLine> currentGroup = [];
 
-    bool? currentType = lines.first.isError;
+    LineType currentType = lines.first.type;
     bool currentIsCommand = lines.first.text.trim().startsWith("~");
 
     for (var line in lines) {
       final bool lineIsCommand = line.text.trim().startsWith("~");
 
-      if (line.isError == currentType &&
+      if (line.type == currentType &&
           lineIsCommand == currentIsCommand &&
           !lineIsCommand) {
         currentGroup.add(line);
@@ -115,7 +114,7 @@ class _SessionWidget extends StatelessWidget {
           ),
         );
         currentGroup = [line];
-        currentType = line.isError;
+        currentType = line.type;
         currentIsCommand = lineIsCommand;
       }
     }
@@ -133,7 +132,7 @@ class _SessionWidget extends StatelessWidget {
 
 class _TextGroup extends StatelessWidget {
   final List<TerminalLine> group;
-  final bool? type;
+  final LineType type;
   final bool isCommand;
 
   const _TextGroup({
@@ -147,24 +146,32 @@ class _TextGroup extends StatelessWidget {
     final String combinedText = group.map((e) => e.text).join("\n");
     if (combinedText.isEmpty) return const SizedBox.shrink();
 
-    Color? textColor;
-    if (isCommand) {
-      textColor = context.secondary.withOpacity(0.7);
-    } else if (type == true) {
-      textColor = context.error;
-    } else if (type == false) {
-      textColor = context.warning;
-    }
-
     return SelectableText(
       combinedText,
       style: TextStyle(
         fontSize: kSmallFont,
-        color: textColor,
+        color: _getLineColor(type),
         fontStyle: isCommand ? FontStyle.italic : FontStyle.normal,
-        fontWeight: (type != null || isCommand) ? FontWeight.bold : null,
+        fontWeight: (type != LineType.normal || isCommand)
+            ? FontWeight.bold
+            : null,
         height: isCommand ? 2.2 : 1.5,
       ),
     );
+  }
+
+  Color _getLineColor(LineType type) {
+    switch (type) {
+      case LineType.error:
+        return Colors.redAccent;
+      case LineType.warning:
+        return Colors.orangeAccent;
+      case LineType.success:
+        return Colors.green;
+      case LineType.info:
+        return Colors.blueAccent;
+      case LineType.normal:
+        return Colors.white;
+    }
   }
 }

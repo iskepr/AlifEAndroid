@@ -169,6 +169,16 @@ class S {
     return Intl.message('Warning', name: 'warning', desc: '', args: []);
   }
 
+  /// `Success`
+  String get success {
+    return Intl.message('Success', name: 'success', desc: '', args: []);
+  }
+
+  /// `Info`
+  String get info {
+    return Intl.message('Info', name: 'info', desc: '', args: []);
+  }
+
   /// `Clear`
   String get clear {
     return Intl.message('Clear', name: 'clear', desc: '', args: []);

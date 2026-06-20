@@ -50,4 +50,24 @@ abstract class AppThemes {
     platform: TargetPlatform.linux,
     fontFamily: kMainFont,
   );
+
+  static final lightTheme = ThemeData(
+    brightness: Brightness.light,
+    colorScheme: ColorScheme.fromSeed(
+      brightness: Brightness.light,
+      seedColor: AppColors.primary,
+      primary: AppColors.primary,
+      secondary: AppColors.secondary,
+      surface: AppColors.foreground,
+      background: AppColors.background,
+      onBackground: AppColors.foreground,
+      outline: AppColors.secondary.withOpacity(0.3),
+      error: AppColors.error,
+      tertiary: AppColors.success,
+    ),
+    scaffoldBackgroundColor: AppColors.background,
+    visualDensity: VisualDensity.compact,
+    platform: TargetPlatform.linux,
+    fontFamily: kMainFont,
+  );
 }

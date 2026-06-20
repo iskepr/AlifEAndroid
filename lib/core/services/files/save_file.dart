@@ -8,7 +8,7 @@ import "package:provider/provider.dart";
 import "package:shared_preferences/shared_preferences.dart";
 import "../../../constants.dart";
 import "../../models/data_typs.dart";
-import "../../providers/terminal_provider.dart";
+import "../../../features/terminal/provider/terminal_provider.dart";
 import "../../providers/workspace_provider.dart";
 
 Future<bool> saveFileToStorage(

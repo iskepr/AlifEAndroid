@@ -6,7 +6,7 @@ import "package:provider/provider.dart";
 import "package:shared_preferences/shared_preferences.dart";
 import "../../constants.dart";
 import "../providers/settings_provider.dart";
-import "../providers/terminal_provider.dart";
+import "../../features/terminal/provider/terminal_provider.dart";
 
 Future<void> setupAlif(BuildContext context) async {
   final terminal = context.read<TerminalProvider>();

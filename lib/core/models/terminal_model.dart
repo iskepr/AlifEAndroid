@@ -1,13 +1,13 @@
+enum LineType { normal, error, warning, success, info }
+
 class TerminalLine {
   final String text;
   final int sessionId;
-  final bool? isError;
-  final bool isSystem;
+  final LineType type;
 
   TerminalLine({
     required this.text,
     required this.sessionId,
-    this.isError,
-    this.isSystem = false,
+    this.type = LineType.normal,
   });
 }
