@@ -197,7 +197,7 @@ class WorkspaceProvider extends ChangeNotifier {
 
   bool isKeyboardEnabled = false;
   void _onFocusChange() {
-    if (_settings.get(AppSetting.customKeyboard)) return;
+    if (!_settings.get(AppSetting.customKeyboard)) return;
     if (isKeyboardEnabled != codeControllerFocus.hasFocus) {
       isKeyboardEnabled = codeControllerFocus.hasFocus;
       if (isKeyboardEnabled) {
@@ -208,7 +208,7 @@ class WorkspaceProvider extends ChangeNotifier {
   }
 
   void toggleKeyboard({bool? enable}) {
-    if (_settings.get(AppSetting.customKeyboard)) return;
+    if (!_settings.get(AppSetting.customKeyboard)) return;
     isKeyboardEnabled = enable ?? !isKeyboardEnabled;
     if (isKeyboardEnabled) {
       SystemChannels.textInput.invokeMethod("TextInput.hide");

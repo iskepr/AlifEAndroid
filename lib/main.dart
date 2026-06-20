@@ -6,11 +6,11 @@ import "package:shared_preferences/shared_preferences.dart";
 
 import "constants.dart";
 import "core/providers/settings_provider.dart";
-import "features/terminal/provider/terminal_provider.dart";
 import "core/providers/workspace_provider.dart";
 import "core/theme/colors.dart";
 import "features/editor/view/editor_view.dart";
 import "features/keyboard/data/keyboard_provider.dart";
+import "features/terminal/provider/terminal_provider.dart";
 import "generated/l10n.dart";
 
 void main() async {

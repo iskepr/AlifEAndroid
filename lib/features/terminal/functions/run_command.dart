@@ -1,13 +1,14 @@
 import "dart:convert";
 import "dart:io";
+
 import "package:flutter/material.dart";
 import "package:path_provider/path_provider.dart";
 import "package:provider/provider.dart";
 
 import "../../../constants.dart";
 import "../../../core/providers/settings_provider.dart";
-import "../provider/terminal_provider.dart";
 import "../../../core/providers/workspace_provider.dart";
+import "../provider/terminal_provider.dart";
 import "handle_commands.dart";
 
 Future<void> runCommand(BuildContext context, String commandInput) async {
