@@ -1,5 +1,4 @@
 import "dart:io";
-
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
@@ -22,10 +21,11 @@ Future<void> openFileFromStorage(
       context,
       (selectedPath) async {
         final file = File(selectedPath);
-        final code = await file.readAsString();
-        final fileName = selectedPath.split(Platform.pathSeparator).last;
 
-        final existingIndex = workspace.files.indexWhere(
+        final String code = await file.readAsString();
+        final String fileName = selectedPath.split(Platform.pathSeparator).last;
+
+        final int existingIndex = workspace.files.indexWhere(
           (f) => f.path == selectedPath,
         );
 
@@ -42,6 +42,6 @@ Future<void> openFileFromStorage(
       onFolderSelected: (folderPath) => workspace.setWorkspacePath(folderPath),
     );
   } catch (e) {
-    showMessage("فشل في فتح الملف");
+    showMessage("فشل في فتح الملف بسبب خطأ في القراءة");
   }
 }

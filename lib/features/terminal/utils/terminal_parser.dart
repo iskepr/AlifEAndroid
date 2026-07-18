@@ -1,7 +1,12 @@
-import "../../../constants.dart";
 import "../../../core/models/terminal_model.dart";
 
-List getLineType(String text, LineType? type, bool? isError) {
+List getLineType(
+  String text,
+  LineType? type,
+  bool? isError,
+  String errorLabel,
+  String warningLabel,
+) {
   String prefix = "";
   LineType currentType = type ?? LineType.normal;
 
@@ -17,12 +22,12 @@ List getLineType(String text, LineType? type, bool? isError) {
   final infoRegex = RegExp(r"(info|note|معلومات|ملحوظة)", caseSensitive: false);
 
   if (type == LineType.error || isError == true || errorRegex.hasMatch(text)) {
-    prefix = l10n.error;
+    prefix = errorLabel;
     currentType = LineType.error;
   } else if (type == LineType.warning ||
       isError == false ||
       warningRegex.hasMatch(text)) {
-    prefix = l10n.warning;
+    prefix = warningLabel;
     currentType = LineType.warning;
   } else if (successRegex.hasMatch(text)) {
     currentType = LineType.success;

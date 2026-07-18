@@ -17,56 +17,53 @@ class CustomAppBar extends StatelessWidget {
   const CustomAppBar({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final workspace = context.watch<WorkspaceProvider>();
+  Widget build(BuildContext context) => SafeArea(
+    bottom: false,
+    child: Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(
+            top: kMediumPadding,
+            right: kMediumPadding,
+            left: kMediumPadding,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton(
+                onPressed: () {
+                  showMyBottomSheet(
+                    context: context,
+                    isScrolable: true,
+                    child: const SettingsView(),
+                  );
+                },
+                child: Text(l10n.title, style: ThemeText.title),
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () => createFile(context),
+                    icon: Icon(LucideIcons.plus, size: 20, color: context.text),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      LucideIcons.terminal,
+                      color: context.foreground,
+                      size: kLargeFont,
+                    ),
+                    onPressed: () => showTerminalView(context),
+                  ),
 
-    return SafeArea(
-      bottom: false,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(
-              top: kMediumPadding,
-              right: kMediumPadding,
-              left: kMediumPadding,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    showMyBottomSheet(
-                      context: context,
-                      isScrolable: true,
-                      child: const SettingsView(),
-                    );
-                  },
-                  child: Text(l10n.title, style: ThemeText.title),
-                ),
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => createFile(context),
-                      icon: Icon(
-                        LucideIcons.plus,
-                        size: 20,
-                        color: context.text,
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        LucideIcons.terminal,
-                        color: context.foreground,
-                        size: kLargeFont,
-                      ),
-                      onPressed: () => showTerminalView(context),
-                    ),
-                    if (workspace.workspacePath != null)
-                      IconButton(
+                  Selector<WorkspaceProvider, String?>(
+                    selector: (_, prov) => prov.workspacePath,
+                    builder: (context, workspacePath, child) {
+                      if (workspacePath == null) return const SizedBox.shrink();
+                      return IconButton(
                         onPressed: () => openFileFromStorage(
                           context,
-                          rootPath: workspace.workspacePath!,
-                          startPath: workspace.workspacePath,
+                          rootPath: workspacePath,
+                          startPath: workspacePath,
                           isWorkspace: true,
                         ),
                         icon: Icon(
@@ -74,33 +71,34 @@ class CustomAppBar extends StatelessWidget {
                           size: 20,
                           color: context.text,
                         ),
-                      ),
-                    IconButton(
-                      icon: Icon(
-                        LucideIcons.save,
-                        color: context.foreground,
-                        size: kLargeFont,
-                      ),
-                      onPressed: () => saveFileToStorage(context),
-                      onLongPress: () =>
-                          saveFileToStorage(context, asNew: true),
+                      );
+                    },
+                  ),
+
+                  IconButton(
+                    icon: Icon(
+                      LucideIcons.save,
+                      color: context.foreground,
+                      size: kLargeFont,
                     ),
-                    IconButton(
-                      icon: Icon(
-                        LucideIcons.folderOpen,
-                        color: context.foreground,
-                        size: kLargeFont,
-                      ),
-                      onPressed: () =>
-                          openFileFromStorage(context, rootPath: kHomeDir),
+                    onPressed: () => saveFileToStorage(context),
+                    onLongPress: () => saveFileToStorage(context, asNew: true),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      LucideIcons.folderOpen,
+                      color: context.foreground,
+                      size: kLargeFont,
                     ),
-                  ],
-                ),
-              ],
-            ),
+                    onPressed: () =>
+                        openFileFromStorage(context, rootPath: kHomeDir),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }

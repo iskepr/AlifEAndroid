@@ -78,7 +78,7 @@ class _IDEViewState extends State<IDEView> {
 
   @override
   Widget build(BuildContext context) {
-    final workspace = context.watch<WorkspaceProvider>();
+    final provReadOnly = context.read<WorkspaceProvider>();
     final settings = context.watch<SettingsProvider>();
 
     return Listener(
@@ -89,49 +89,55 @@ class _IDEViewState extends State<IDEView> {
       onPointerUp: (event) {
         if (!_isScrolling) {
           if (settings.get(AppSetting.customKeyboard)) {
-            workspace.toggleKeyboard(enable: true);
+            context.read<WorkspaceProvider>().toggleKeyboard(enable: true);
           }
         }
       },
-      child: CodeForge(
-        // init
-        controller: workspace.codeController,
-        undoController: workspace.undoController,
-        focusNode: workspace.codeControllerFocus,
-        language: alif,
-        filePath: workspace.selectedFile.path,
-        keyboardType: settings.get(AppSetting.customKeyboard)
-            ? TextInputType.none
-            : TextInputType.multiline,
-        // features
-        enableFolding: settings.get(AppSetting.enableFolding),
-        enableGuideLines: settings.get(AppSetting.enableGuideLines),
-        enableLocalSuggestions: settings.get(AppSetting.enableSuggestions),
-        lineWrap: settings.get(AppSetting.lineWrap),
-        tabSize: settings.get(AppSetting.tabSize),
-        customCodeSnippets: alifSnippets,
-        findController: workspace.findController,
-        finderBuilder: (context, findController) => PreferredSize(
-          preferredSize: const Size.fromHeight(30),
-          child: SearchView(findController: findController),
-        ),
-        // styling
-        editorTheme: alifDarkTheme,
-        textDirection: TextDirection.rtl,
-        innerPadding: const EdgeInsets.only(left: kDefaultPadding * 2),
-        textStyle: TextStyle(
-          fontFamily: settings.get(AppSetting.editorFont),
-          fontSize: settings.get(AppSetting.fontSize),
-          height: Platform.isAndroid ? 1.4 : null,
-        ),
-        gutterStyle: Platform.isAndroid
-            ? GutterStyle(
-                lineNumberStyle: TextStyle(
-                  fontSize: settings.get(AppSetting.fontSize) * 0.95,
-                  fontFamily: settings.get(AppSetting.editorFont),
-                ),
-              )
-            : null,
+
+      child: Selector<WorkspaceProvider, String?>(
+        selector: (_, prov) => prov.selectedFile.path,
+        builder: (context, filePath, child) {
+          return CodeForge(
+            // init
+            controller: provReadOnly.codeController,
+            undoController: provReadOnly.undoController,
+            focusNode: provReadOnly.codeControllerFocus,
+            language: alif,
+            filePath: filePath,
+            keyboardType: settings.get(AppSetting.customKeyboard)
+                ? TextInputType.none
+                : TextInputType.multiline,
+            // features
+            enableFolding: settings.get(AppSetting.enableFolding),
+            enableGuideLines: settings.get(AppSetting.enableGuideLines),
+            enableLocalSuggestions: settings.get(AppSetting.enableSuggestions),
+            lineWrap: settings.get(AppSetting.lineWrap),
+            tabSize: settings.get(AppSetting.tabSize),
+            customCodeSnippets: alifSnippets,
+            findController: provReadOnly.findController,
+            finderBuilder: (context, findController) => PreferredSize(
+              preferredSize: const Size.fromHeight(30),
+              child: SearchView(findController: findController),
+            ),
+            // styling
+            editorTheme: alifDarkTheme,
+            textDirection: TextDirection.rtl,
+            innerPadding: const EdgeInsets.only(left: kDefaultPadding * 2),
+            textStyle: TextStyle(
+              fontFamily: settings.get(AppSetting.editorFont),
+              fontSize: settings.get(AppSetting.fontSize),
+              height: Platform.isAndroid ? 1.4 : null,
+            ),
+            gutterStyle: Platform.isAndroid
+                ? GutterStyle(
+                    lineNumberStyle: TextStyle(
+                      fontSize: settings.get(AppSetting.fontSize) * 0.95,
+                      fontFamily: settings.get(AppSetting.editorFont),
+                    ),
+                  )
+                : null,
+          );
+        },
       ),
     );
   }

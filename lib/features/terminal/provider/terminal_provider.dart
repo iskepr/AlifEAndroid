@@ -1,7 +1,9 @@
 import "dart:io";
 
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 
+import "../../../constants.dart";
 import "../../../core/models/data_typs.dart";
 import "../../../core/providers/settings_provider.dart";
 import "../utils/terminal_parser.dart";
@@ -26,86 +28,43 @@ class TerminalProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addOutput(
+  Future<void> addOutput(
     String text, {
     bool newLine = true,
     bool? isError,
     LineType? type,
-  }) {
-    if (outputLines.isEmpty) {
-      outputLines.add(
-        TerminalLine(
-          text: "",
-          sessionId: currentSessionId,
-          type: LineType.normal,
-        ),
-      );
-    }
+  }) async {
+    final Map<String, dynamic> params = {
+      "text": text,
+      "currentLines": List<TerminalLine>.from(outputLines),
+      "sessionId": currentSessionId,
+      "type": type,
+      "isError": isError,
+      "newLine": newLine,
+      "errorLabel": l10n.error,
+      "warningLabel": l10n.warning,
+    };
 
-    final lineType = getLineType(text, type, isError);
-    final String prefix = lineType[0];
-    final LineType currentType = type ?? lineType[1];
+    final List<TerminalLine> processedLines = await compute(
+      parseTerminalOutputInBackground,
+      params,
+    );
 
-    final String lastLineText = outputLines.removeLast().text;
-
-    final String fullText =
-        lastLineText +
-        (lastLineText.isEmpty ? prefix : "") +
-        text +
-        (newLine ? "\n" : "");
-
-    final List<String> rawLines = fullText.split("\n");
-
-    for (int i = 0; i < rawLines.length; i++) {
-      String processedLine = rawLines[i];
-      if (processedLine.contains("\r")) {
-        processedLine = processedLine.substring(
-          processedLine.lastIndexOf("\r") + 1,
-        );
-      }
-
-      if (i < rawLines.length - 1) {
-        outputLines.add(
-          TerminalLine(
-            text: processedLine,
-            sessionId: currentSessionId,
-            type: currentType,
-          ),
-        );
-      } else {
-        if (fullText.endsWith("\n") && processedLine.isEmpty) {
-          outputLines.add(
-            TerminalLine(
-              text: "",
-              sessionId: currentSessionId,
-              type: LineType.normal,
-            ),
-          );
-        } else {
-          outputLines.add(
-            TerminalLine(
-              text: processedLine,
-              sessionId: currentSessionId,
-              type: currentType,
-            ),
-          );
-        }
-      }
-    }
-
-    if (outputLines.length > 300) {
-      outputLines.removeRange(0, outputLines.length - 300);
-    }
+    outputLines.clear();
+    outputLines.addAll(processedLines);
 
     notifyListeners();
 
+    final LineType finalType =
+        type ??
+        (outputLines.isNotEmpty ? outputLines.last.type : LineType.normal);
     _settings.runVibration(
-      pattern: currentType == LineType.error
+      pattern: finalType == LineType.error
           ? [0, 100, 50, 100]
-          : currentType == LineType.warning
+          : finalType == LineType.warning
           ? [0, 100]
           : [0, 50],
-      duration: currentType == LineType.warning ? 100 : 0,
+      duration: finalType == LineType.warning ? 100 : 0,
     );
   }
 
@@ -143,4 +102,77 @@ class TerminalProvider extends ChangeNotifier {
     runningProcess?.kill();
     super.dispose();
   }
+}
+
+List<TerminalLine> parseTerminalOutputInBackground(
+  Map<String, dynamic> params,
+) {
+  final String text = params["text"] as String;
+  final List<TerminalLine> currentLines = List<TerminalLine>.from(
+    params["currentLines"],
+  );
+  final int sessionId = params["sessionId"] as int;
+  final LineType? type = params["type"] as LineType?;
+  final bool? isError = params["isError"] as bool?;
+  final String errorLabel = params["errorLabel"] as String;
+  final String warningLabel = params["warningLabel"] as String;
+
+  if (currentLines.isEmpty) {
+    currentLines.add(
+      TerminalLine(text: "", sessionId: sessionId, type: LineType.normal),
+    );
+  }
+
+  final lineType = getLineType(text, type, isError, errorLabel, warningLabel);
+  final String prefix = lineType[0];
+  final LineType currentType = type ?? lineType[1];
+
+  final String lastLineText = currentLines.removeLast().text;
+
+  final String fullText =
+      lastLineText +
+      (lastLineText.isEmpty ? prefix : "") +
+      text +
+      (params["newLine"] ? "\n" : "");
+
+  final List<String> rawLines = fullText.split("\n");
+
+  for (int i = 0; i < rawLines.length; i++) {
+    String processedLine = rawLines[i];
+    if (processedLine.contains("\r")) {
+      processedLine = processedLine.substring(
+        processedLine.lastIndexOf("\r") + 1,
+      );
+    }
+
+    if (i < rawLines.length - 1) {
+      currentLines.add(
+        TerminalLine(
+          text: processedLine,
+          sessionId: sessionId,
+          type: currentType,
+        ),
+      );
+    } else {
+      if (fullText.endsWith("\n") && processedLine.isEmpty) {
+        currentLines.add(
+          TerminalLine(text: "", sessionId: sessionId, type: LineType.normal),
+        );
+      } else {
+        currentLines.add(
+          TerminalLine(
+            text: processedLine,
+            sessionId: sessionId,
+            type: currentType,
+          ),
+        );
+      }
+    }
+  }
+
+  if (currentLines.length > 300) {
+    currentLines.removeRange(0, currentLines.length - 300);
+  }
+
+  return currentLines;
 }
