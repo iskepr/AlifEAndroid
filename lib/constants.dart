@@ -54,6 +54,7 @@ const String kBoxSettings = "box_Settings";
 const String kKeyLastFile = "box_last_file";
 const String kKeyAlifVersion = "alif_version";
 const String kKeyWorkspacePath = "workspace_path";
+const String kKeyBashHistory = "bash_history";
 
 // directories
 final String kHomeDir = Platform.isAndroid

@@ -4,8 +4,10 @@ import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 
 import "../../../constants.dart";
+import "../../../core/helpers/hive_helper.dart";
 import "../../../core/models/data_typs.dart";
 import "../../../core/providers/settings_provider.dart";
+import "../functions/handle_commands.dart";
 import "../utils/terminal_parser.dart";
 
 class TerminalProvider extends ChangeNotifier {
@@ -19,8 +21,16 @@ class TerminalProvider extends ChangeNotifier {
   String terminalHint = "أدخل الأمر...";
   Process? runningProcess;
 
+  static const int _maxBashHistory = 100;
+  List<String> suggestions = [];
+  List<String> history = [];
+
   TerminalProvider(this._settings) {
     terminalFocus = FocusNode();
+    history = HiveHelper.getListDataByKey<String>(
+      kBoxSettings,
+      kKeyBashHistory,
+    );
   }
 
   void startNewTerminalSession() {
@@ -71,7 +81,62 @@ class TerminalProvider extends ChangeNotifier {
   void clearOutput() {
     outputLines.clear();
     currentSessionId = 0;
+  }
+
+  Future<void> saveHistory(String command) async {
+    final cleaned = command.trim();
+    if (cleaned.isEmpty) return;
+
+    history.removeWhere((item) => item.toLowerCase() == cleaned.toLowerCase());
+    history.insert(0, cleaned);
+    if (history.length > _maxBashHistory) {
+      history.removeRange(_maxBashHistory, history.length);
+    }
+
+    await HiveHelper.saveListDataByKey<String>(
+      kBoxSettings,
+      kKeyBashHistory,
+      history,
+    );
     notifyListeners();
+  }
+
+  void updateSuggestions(String text) {
+    if (!_settings.get<bool>(AppSetting.enableSuggestions)) {
+      if (suggestions.isNotEmpty) {
+        suggestions = [];
+        notifyListeners();
+      }
+      return;
+    }
+
+    final rawInput = text.trimLeft();
+    final segments = rawInput.split(RegExp(r"\s+"));
+    if (segments.isEmpty || segments.first.isEmpty || rawInput.contains(" ")) {
+      if (suggestions.isNotEmpty) {
+        suggestions = [];
+        notifyListeners();
+      }
+      return;
+    }
+
+    final lowerInput = rawInput.toLowerCase();
+    final merged = <String>{
+      ...history.where((cmd) => cmd.toLowerCase().startsWith(lowerInput)),
+      ...getTerminalSuggestions(segments.first),
+    }.toList();
+
+    if (!listEquals(merged, suggestions)) {
+      suggestions = merged;
+      notifyListeners();
+    }
+  }
+
+  void clearSuggestions() {
+    if (suggestions.isNotEmpty) {
+      suggestions = [];
+      notifyListeners();
+    }
   }
 
   void sendOutput(String input) {

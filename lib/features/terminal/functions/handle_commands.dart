@@ -27,6 +27,19 @@ enum BuiltIn {
   const BuiltIn(this.aliases, this.description);
 }
 
+List<String> getTerminalSuggestions(String prefix) {
+  final lowerPrefix = prefix.toLowerCase();
+  final suggestions = <String>{
+    kAlifBin,
+    for (final cmd in BuiltIn.values) ...cmd.aliases,
+  };
+
+  return suggestions
+      .where((item) => item.toLowerCase().startsWith(lowerPrefix))
+      .toList()
+    ..sort((a, b) => a.compareTo(b));
+}
+
 Future<bool> handleCommands(
   BuildContext context,
   List<String> commandParts,

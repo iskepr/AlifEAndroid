@@ -31,7 +31,7 @@ class TerminalTopBar extends StatelessWidget {
               IconButton(
                 icon: Icon(
                   LucideIcons.listX,
-                  color: context.foreground,
+                  color: context.secondary,
                   size: kLargeFont,
                 ),
                 onPressed: data.clearOutput,
@@ -39,7 +39,7 @@ class TerminalTopBar extends StatelessWidget {
               IconButton(
                 icon: Icon(
                   LucideIcons.copy,
-                  color: context.foreground,
+                  color: context.secondary,
                   size: kLargeFont,
                 ),
                 onPressed: () async {
