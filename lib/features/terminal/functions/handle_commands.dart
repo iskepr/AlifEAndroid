@@ -6,30 +6,26 @@ import "package:provider/provider.dart";
 import "../../../constants.dart";
 import "../../../core/providers/workspace_provider.dart";
 import "../provider/terminal_provider.dart";
+import "run_command.dart";
 
-enum BuiltIn { clear, pwd, cd, echo, date, ls, mkdir, touch, rm, help, exit }
+enum BuiltIn {
+  clear(["مسح", "clear"], "تنظيف الشاشة"),
+  pwd(["مسار", "pwd"], "عرض مسار العمل الحالي"),
+  cd(["انتقل", "cd"], "تغيير مسار العمل"),
+  echo(["طباعة", "اطبع", "echo"], "طباعة نص على الشاشة"),
+  date(["تاريخ", "date"], "عرض الوقت والتاريخ الحالي"),
+  ls(["عرض", "ls"], "عرض محتويات المجلد الحالي"),
+  mkdir(["مجلد", "mkdir"], "إنشاء مجلد جديد"),
+  touch(["ملف", "touch"], "إنشاء ملف جديد فارغ"),
+  rm(["حذف", "rm"], "حذف ملف أو مجلد"),
+  help(["مساعدة", "help"], "عرض هذه القائمة"),
+  run(["تشغيل", "بدء", "run"], "تشغيل التطبيق"),
+  exit(["إنهاء", "انهاء", "exit"], "إنهاء العملية الحالية");
 
-class CommandDef {
-  final BuiltIn id;
   final List<String> aliases;
   final String description;
-
-  const CommandDef(this.id, this.aliases, this.description);
+  const BuiltIn(this.aliases, this.description);
 }
-
-const List<CommandDef> _commands = [
-  CommandDef(BuiltIn.clear, ["مسح", "clear"], "تنظيف الشاشة"),
-  CommandDef(BuiltIn.pwd, ["مسار", "pwd"], "عرض مسار العمل الحالي"),
-  CommandDef(BuiltIn.cd, ["انتقل", "cd"], "تغيير مسار العمل"),
-  CommandDef(BuiltIn.ls, ["عرض", "ls"], "عرض محتويات المجلد الحالي"),
-  CommandDef(BuiltIn.mkdir, ["مجلد", "mkdir"], "إنشاء مجلد جديد"),
-  CommandDef(BuiltIn.touch, ["ملف", "touch"], "إنشاء ملف جديد فارغ"),
-  CommandDef(BuiltIn.rm, ["حذف", "rm"], "حذف ملف أو مجلد"),
-  CommandDef(BuiltIn.echo, ["طباعة", "اطبع", "echo"], "طباعة نص على الشاشة"),
-  CommandDef(BuiltIn.date, ["تاريخ", "date"], "عرض الوقت والتاريخ الحالي"),
-  CommandDef(BuiltIn.help, ["مساعدة", "help"], "عرض هذه القائمة"),
-  CommandDef(BuiltIn.exit, ["إنهاء", "انهاء", "exit"], "إنهاء العملية الحالية"),
-];
 
 Future<bool> handleCommands(
   BuildContext context,
@@ -37,7 +33,6 @@ Future<bool> handleCommands(
 ) async {
   if (commandParts.isEmpty) return false;
 
-  // بنقرا البروفايدرات من الكونتكست من غير ما نعمل rebuild
   final terminal = context.read<TerminalProvider>();
   final workspace = context.read<WorkspaceProvider>();
 
@@ -45,9 +40,9 @@ Future<bool> handleCommands(
   final args = commandParts.length > 1 ? commandParts.sublist(1) : <String>[];
 
   BuiltIn? matchedCmd;
-  for (final cmd in _commands) {
+  for (final cmd in BuiltIn.values.toList()) {
     if (cmd.aliases.contains(command)) {
-      matchedCmd = cmd.id;
+      matchedCmd = cmd;
       break;
     }
   }
@@ -93,14 +88,16 @@ Future<bool> handleCommands(
       terminal.clearRunningProcess();
       terminal.addOutput("\n ---");
       return true;
+    case BuiltIn.run:
+      runCommand(context, kAlifBin);
+      return true;
   }
 }
 
-String _getCurrentPath(WorkspaceProvider workspace) {
-  return workspace.workspacePath?.isNotEmpty == true
-      ? workspace.workspacePath!
-      : kHomeDir;
-}
+String _getCurrentPath(WorkspaceProvider workspace) =>
+    workspace.workspacePath?.isNotEmpty == true
+    ? workspace.workspacePath!
+    : kHomeDir;
 
 String _resolvePath(String currentPath, String targetDir) {
   if (targetDir.startsWith("/")) return targetDir;
@@ -114,7 +111,7 @@ String _resolvePath(String currentPath, String targetDir) {
 
 void _showHelp(TerminalProvider terminal) {
   final buffer = StringBuffer("الأوامر الداخلية المتاحة:\n");
-  for (final cmd in _commands) {
+  for (final cmd in BuiltIn.values.toList()) {
     final aliasesStr = cmd.aliases.join(" | ");
     buffer.writeln("$aliasesStr: ${cmd.description}");
   }
