@@ -46,14 +46,14 @@ const Curve kCurveEaseOutBack = Curves.easeOutBack;
 const int kCodeSpaceLength = 4;
 final String kCodeSpace = " " * kCodeSpaceLength;
 
-// prefs keys
-const String kKeyLastFile = "lastFile";
+// Hive Boxes
+const String kBoxOpenedFiles = "box_opened_files";
+const String kBoxSettings = "box_Settings";
+
+// Boxes keys
+const String kKeyLastFile = "box_last_file";
 const String kKeyAlifVersion = "alif_version";
-const String kKeyAutoSave = "autoSave";
-const String kKeyShortcutsCounts = "shortcuts_counts";
-const String kKeyFontSize = "fontSize";
-const String kKeyOpenedFiles = "opened_files";
-const String kKeyWorkspacePath = "workspacePath";
+const String kKeyWorkspacePath = "workspace_path";
 
 // directories
 final String kHomeDir = Platform.isAndroid
@@ -73,5 +73,5 @@ final GlobalKey<ScaffoldMessengerState> messengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
 // Versions
-const String kAppVersion = "v1.1.0";
+const String kAppVersion = "v1.2.0";
 const String kAlifVersion = "v5.3.0";

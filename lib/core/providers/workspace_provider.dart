@@ -4,11 +4,11 @@ import "dart:io";
 import "package:code_forge/code_forge.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:shared_preferences/shared_preferences.dart";
 
 import "../../constants.dart";
 import "../../features/editor/models/code_controller.dart";
 import "../extensions/extensions.dart";
+import "../helpers/hive_helper.dart";
 import "../models/data_typs.dart";
 import "../services/files/external_file_watcher.dart";
 import "../services/files/open_file.dart";
@@ -21,7 +21,6 @@ class WorkspaceProvider extends ChangeNotifier {
 
   final SettingsProvider _settings;
 
-  SharedPreferences? _prefs;
   late final CodeController codeController;
   StreamSubscription<FileSystemEvent>? _externalFileWatcher;
   late final FindController findController;
@@ -46,9 +45,8 @@ class WorkspaceProvider extends ChangeNotifier {
   }
 
   Future<void> _init() async {
-    _prefs = await SharedPreferences.getInstance();
-    lastFile = _prefs?.getInt(kKeyLastFile) ?? 0;
-    workspacePath = _prefs?.getString(kKeyWorkspacePath);
+    lastFile = HiveHelper.getData<int>(kBoxSettings, kKeyLastFile) ?? 0;
+    workspacePath = HiveHelper.getData<String>(kBoxSettings, kKeyWorkspacePath);
     notifyListeners();
   }
 
@@ -71,7 +69,7 @@ class WorkspaceProvider extends ChangeNotifier {
 
   void setLastFile(int value) {
     lastFile = value;
-    _prefs?.setInt(kKeyLastFile, value);
+    HiveHelper.saveData<int>(kBoxSettings, key: kKeyLastFile, value);
     notifyListeners();
   }
 
@@ -79,7 +77,7 @@ class WorkspaceProvider extends ChangeNotifier {
     workspacePath = path;
     notifyListeners();
     if (path != null) {
-      _prefs?.setString(kKeyWorkspacePath, path);
+      HiveHelper.saveData(kBoxSettings, key: kKeyWorkspacePath, path);
     }
   }
 

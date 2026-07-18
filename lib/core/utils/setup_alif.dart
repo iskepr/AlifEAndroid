@@ -4,17 +4,17 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:path_provider/path_provider.dart";
 import "package:provider/provider.dart";
-import "package:shared_preferences/shared_preferences.dart";
 
 import "../../constants.dart";
 import "../../features/terminal/provider/terminal_provider.dart";
+import "../helpers/hive_helper.dart";
 import "../providers/settings_provider.dart";
 
 Future<void> setupAlif(BuildContext context) async {
   final terminal = context.read<TerminalProvider>();
   try {
-    final prefs = await SharedPreferences.getInstance();
-    final installedVersion = prefs.getString(kKeyAlifVersion) ?? "";
+    final installedVersion =
+        HiveHelper.getData<String>(kBoxSettings, kKeyAlifVersion) ?? "";
     final bool needsUpdate = installedVersion != kAlifVersion;
     final String updateMessage =
         "${l10n.successUpdateAlifVersionFrom} $installedVersion ${l10n.to} $kAlifVersion";
@@ -78,7 +78,11 @@ Future<void> setupAlif(BuildContext context) async {
         // await Process.run("chmod", ["+x", gitPath]);
       }
 
-      await prefs.setString(kKeyAlifVersion, kAlifVersion);
+      await HiveHelper.saveData<String>(
+        kBoxSettings,
+        key: kKeyAlifVersion,
+        kAlifVersion,
+      );
       if (installedVersion.isNotEmpty) terminal.addOutput(updateMessage);
     }
 

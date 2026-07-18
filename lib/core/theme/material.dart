@@ -118,7 +118,7 @@ class MyMaterial extends StatelessWidget {
       end: Alignment.bottomRight,
       colors: [
         baseColor.withOpacity(isGlass ? 0.1 : 0.9),
-        baseColor.withOpacity(isGlass ? 0 : 0.5),
+        baseColor.withOpacity(isGlass ? 0 : 1),
         baseColor.withOpacity(isGlass ? 0.1 : 0.9),
       ],
     );

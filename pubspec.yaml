@@ -1,7 +1,7 @@
 name: taif
 description: "مُحرر لغة ألف"
 publish_to: none
-version: 1.1.0
+version: 1.2.0
 
 environment:
     sdk: ">=3.12.0 <4.0.0"
@@ -16,8 +16,9 @@ dependencies:
         sdk: flutter
     fluttertoast: ^9.0.0
     highlight: ^0.7.0
+    hive_flutter: ^1.1.0
     http: ^1.6.0
-    input_quantity: ^2.5.2
+    input_quantity: ^2.3.2
     lucide_icons_flutter: ^3.1.9
     ota_update: ^7.1.0
     package_info_plus: ^9.0.0
@@ -27,12 +28,13 @@ dependencies:
     provider: ^6.1.5+1
     re_highlight: ^0.0.3
     share_plus: ^12.0.2
-    shared_preferences: ^2.5.4
     url_launcher: ^6.3.2
     vibration: ^3.1.8
 
 dev_dependencies:
     flutter_lints: ^5.0.0
+    hive_generator: ^2.0.1
+    build_runner: ^2.4.9
     flutter_test:
         sdk: flutter
 

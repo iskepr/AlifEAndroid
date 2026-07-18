@@ -1,6 +1,6 @@
 import "dart:io";
 
-import "../../models/file_model.dart";
+import "../../models/file_entity.dart";
 
 class ExternalFileWatcher {
   static Future<FileEntity> applyEvent({

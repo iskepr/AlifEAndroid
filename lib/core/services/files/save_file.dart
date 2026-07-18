@@ -5,10 +5,10 @@ import "dart:typed_data";
 import "package:file_saver/file_saver.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
-import "package:shared_preferences/shared_preferences.dart";
 
 import "../../../constants.dart";
 import "../../../features/terminal/provider/terminal_provider.dart";
+import "../../helpers/hive_helper.dart";
 import "../../models/data_typs.dart";
 import "../../providers/workspace_provider.dart";
 
@@ -98,6 +98,6 @@ Future<void> saveFilesLocal([
   List<FileEntity>? files,
 ]) async {
   final workspace = context?.read<WorkspaceProvider>();
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setString(kKeyOpenedFiles, jsonEncode(workspace?.files ?? files));
+  final finalFilse = workspace?.files ?? files ?? [];
+  await HiveHelper.saveListData<FileEntity>(kBoxOpenedFiles, finalFilse);
 }

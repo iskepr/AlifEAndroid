@@ -2,9 +2,8 @@ import "package:code_forge/code_forge.dart";
 import "package:flutter/material.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
 import "package:provider/provider.dart";
-import "package:shared_preferences/shared_preferences.dart";
-
 import "constants.dart";
+import "core/helpers/hive_helper.dart";
 import "core/providers/settings_provider.dart";
 import "core/providers/workspace_provider.dart";
 import "core/theme/colors.dart";
@@ -16,14 +15,14 @@ import "generated/l10n.dart";
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final prefs = await SharedPreferences.getInstance();
   await RustLib.init();
+  await HiveHelper.init();
 
   runApp(
     MultiProvider(
       providers: [
         // Settings Provider
-        ChangeNotifierProvider(create: (_) => SettingsProvider(prefs)),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
         // Workspace Provider
         ChangeNotifierProxyProvider<SettingsProvider, WorkspaceProvider>(
           create: (context) =>

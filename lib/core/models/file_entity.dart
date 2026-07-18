@@ -1,14 +1,26 @@
 import "dart:io";
 
+import "package:hive_flutter/hive_flutter.dart";
+
+part "file_entity.g.dart";
+
 enum FileAction { rename, delete, close, toggleReadOnly }
 
+@HiveType(typeId: 0)
 class FileEntity {
+  @HiveField(0)
   final int id;
+  @HiveField(1)
   final String? tempName;
+  @HiveField(2)
   final String? path;
+  @HiveField(3)
   final String code;
+  @HiveField(4)
   final bool saved;
+  @HiveField(5)
   final List<int> cursor;
+  @HiveField(6)
   final bool readOnly;
 
   const FileEntity({
