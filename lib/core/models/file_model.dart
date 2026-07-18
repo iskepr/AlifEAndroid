@@ -1,8 +1,10 @@
+import "dart:io";
+
 enum FileAction { rename, delete, close, toggleReadOnly }
 
 class FileEntity {
   final int id;
-  final String name;
+  final String? tempName;
   final String? path;
   final String code;
   final bool saved;
@@ -11,7 +13,7 @@ class FileEntity {
 
   const FileEntity({
     required this.id,
-    required this.name,
+    this.tempName,
     this.path,
     required this.code,
     this.saved = false,
@@ -22,7 +24,7 @@ class FileEntity {
   factory FileEntity.fromJson(Map<String, dynamic> json) {
     return FileEntity(
       id: json["id"] ?? 0,
-      name: json["Name"] ?? "ملف",
+      tempName: json["Name"] ?? "ملف",
       path: json["Path"],
       code: json["Code"] ?? "",
       saved: json["Saved"] ?? false,
@@ -30,6 +32,9 @@ class FileEntity {
       readOnly: json["ReadOnly"] ?? false,
     );
   }
+
+  String get name =>
+      path?.split(Platform.pathSeparator).last ?? tempName ?? "بدون_اسم";
 
   Map<String, dynamic> toJson() {
     return {
@@ -43,11 +48,11 @@ class FileEntity {
     };
   }
 
-  static FileEntity empty() => const FileEntity(id: -1, name: "", code: "");
+  static FileEntity empty() => const FileEntity(id: -1, tempName: "", code: "");
 
   FileEntity copyWith({
     int? id,
-    String? name,
+    String? tempName,
     String? path,
     String? code,
     bool? saved,
@@ -56,7 +61,7 @@ class FileEntity {
   }) {
     return FileEntity(
       id: id ?? this.id,
-      name: name ?? this.name,
+      tempName: tempName ?? this.tempName,
       path: path ?? this.path,
       code: code ?? this.code,
       saved: saved ?? this.saved,

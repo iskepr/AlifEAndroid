@@ -1,3 +1,4 @@
+import "dart:async";
 import "dart:convert";
 import "dart:io";
 
@@ -9,6 +10,7 @@ import "package:shared_preferences/shared_preferences.dart";
 import "../../constants.dart";
 import "../../features/editor/models/code_controller.dart";
 import "../models/data_typs.dart";
+import "../services/files/external_file_watcher.dart";
 import "../services/files/open_file.dart";
 import "../services/files/save_file.dart";
 import "../utils/show_message.dart";
@@ -19,6 +21,7 @@ class WorkspaceProvider extends ChangeNotifier {
 
   SharedPreferences? _prefs;
   late final CodeController codeController;
+  StreamSubscription<FileSystemEvent>? _externalFileWatcher;
   late final FindController findController;
   late final UndoRedoController undoController;
   late final FocusNode codeControllerFocus;
@@ -63,6 +66,7 @@ class WorkspaceProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _externalFileWatcher?.cancel();
     codeController.dispose();
     findController.dispose();
     undoController.dispose();
@@ -88,22 +92,24 @@ class WorkspaceProvider extends ChangeNotifier {
     String? newName,
   }) async {
     if (id < 0 || id >= files.length) return;
-    var file = files[id];
+    final FileEntity localFile = files[id];
+    final File file = File(localFile.path!);
 
-    if (type == FileAction.rename && newName?.trim().isNotEmpty == true) {
-      final String? newPath = file.path != null
-          ? "${File(file.path!).parent.path}/${newName!.trim()}"
+    if (type == FileAction.rename && newName != null && newName.isNotEmpty) {
+      final String? newPath = localFile.path != null
+          ? "${file.parent.path}/$newName"
           : null;
-      if (newPath != null && await File(file.path!).exists()) {
+      if (newPath != null && await file.exists()) {
         try {
-          await File(file.path!).rename(newPath);
+          await file.rename(newPath);
         } catch (_) {
-          await File(file.path!).copy(newPath);
-          await File(file.path!).delete();
+          debugPrint("فشل في تغير اسم الملف");
+          await file.copy(newPath);
+          await file.delete();
         }
-        file = file.copyWith(path: newPath);
+        files[id] = localFile.copyWith(path: newPath);
       }
-      files[id] = file.copyWith(name: newName!.trim());
+
       if (_selectedFile.id == id) setSelectedFile(files[id]);
       if (context.mounted) openFile(id, context);
     } else if (type == FileAction.delete || type == FileAction.close) {
@@ -127,13 +133,13 @@ class WorkspaceProvider extends ChangeNotifier {
       if (_selectedFile.id == removed.id) _selectedFile = FileEntity.empty();
 
       if (files.isNotEmpty) {
-        openFile(id >= files.length ? files.length - 1 : id, context);
+        openFile(files.last.id, context);
       } else {
         files.add(FileEntity.empty());
         openFile(0, context);
       }
     } else if (type == FileAction.toggleReadOnly) {
-      files[id] = file.copyWith(readOnly: !file.readOnly);
+      files[id] = localFile.copyWith(readOnly: !localFile.readOnly);
       if (_selectedFile.id == files[id].id) _selectedFile = files[id];
       codeController.readOnly = files[id].readOnly;
     }
@@ -167,7 +173,48 @@ class WorkspaceProvider extends ChangeNotifier {
         extentOffset: end,
       );
     });
+
+    _startWatchingSelectedFile(file);
     notifyListeners();
+  }
+
+  Future<void> _startWatchingSelectedFile(FileEntity file) async {
+    if (!_settings.get(AppSetting.autoSave) ||
+        file.path == null ||
+        file.path!.isEmpty) {
+      _externalFileWatcher?.cancel();
+      _externalFileWatcher = null;
+      return;
+    }
+
+    _externalFileWatcher?.cancel();
+    final fileToWatch = File(file.path!);
+    if (!await fileToWatch.exists()) {
+      _externalFileWatcher = null;
+      return;
+    }
+
+    _externalFileWatcher = fileToWatch.watch().listen((event) async {
+      if (!hasListeners) return;
+
+      final updatedFile = await ExternalFileWatcher.applyEvent(
+        currentFile: file,
+        eventType: event.type,
+        autoSaveEnabled: _settings.get(AppSetting.autoSave),
+      );
+
+      final index = files.indexWhere((f) => f.id == file.id);
+      if (index >= 0) {
+        files[index] = updatedFile;
+        if (selectedFile.id == file.id) {
+          _selectedFile = updatedFile;
+          if (codeController.text != updatedFile.code) {
+            codeController.text = updatedFile.code;
+          }
+        }
+        notifyListeners();
+      }
+    });
   }
 
   void editCode(

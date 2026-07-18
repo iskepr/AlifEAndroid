@@ -4,6 +4,7 @@ analyzer:
     exclude:
         - "lib/generated/**"
         - "**.g.dart"
+        - "build/**"
 
     errors:
         unused_import: warning
