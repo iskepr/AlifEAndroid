@@ -39,6 +39,6 @@ Future<void> loadFilesFromStorage(BuildContext context) async {
     const fileName = "لعبة_اكس_او.الف";
     final gameCode = await rootBundle.loadString("assets/examples/$fileName");
     if (!context.mounted) return;
-    createFile(name: fileName, code: gameCode, context: context);
+    createFile(context,name: fileName, code: gameCode);
   }
 }

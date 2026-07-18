@@ -33,12 +33,7 @@ Future<void> openFileFromStorage(
         if (existingIndex >= 0) {
           openFile(existingIndex, context);
         } else {
-          createFile(
-            name: fileName,
-            path: selectedPath,
-            code: code,
-            context: context,
-          );
+          createFile(context, name: fileName, path: selectedPath, code: code);
         }
       },
       rootPath: rootPath,

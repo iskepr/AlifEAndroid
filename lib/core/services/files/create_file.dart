@@ -7,11 +7,11 @@ import "../../models/data_typs.dart";
 import "../../providers/workspace_provider.dart";
 import "open_file.dart";
 
-void createFile({
+void createFile(
+  BuildContext context, {
   String name = "",
   String path = "",
   String code = "",
-  required BuildContext context,
 }) {
   final workspace = context.read<WorkspaceProvider>();
   final newId = workspace.files.isNotEmpty

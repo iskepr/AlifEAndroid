@@ -46,7 +46,7 @@ class CustomAppBar extends StatelessWidget {
                 Row(
                   children: [
                     IconButton(
-                      onPressed: () => createFile(context: context),
+                      onPressed: () => createFile(context),
                       icon: Icon(
                         LucideIcons.plus,
                         size: 20,

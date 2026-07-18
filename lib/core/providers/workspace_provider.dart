@@ -1,5 +1,4 @@
 import "dart:async";
-import "dart:convert";
 import "dart:io";
 
 import "package:code_forge/code_forge.dart";
@@ -9,6 +8,7 @@ import "package:shared_preferences/shared_preferences.dart";
 
 import "../../constants.dart";
 import "../../features/editor/models/code_controller.dart";
+import "../extensions/extensions.dart";
 import "../models/data_typs.dart";
 import "../services/files/external_file_watcher.dart";
 import "../services/files/open_file.dart";
@@ -17,6 +17,8 @@ import "../utils/show_message.dart";
 import "settings_provider.dart";
 
 class WorkspaceProvider extends ChangeNotifier {
+  late final Future<void> initFuture;
+
   final SettingsProvider _settings;
 
   SharedPreferences? _prefs;
@@ -40,7 +42,7 @@ class WorkspaceProvider extends ChangeNotifier {
     findController = FindController(codeController);
     undoController = UndoRedoController();
     _selectedFile = FileEntity.empty();
-    _init();
+    initFuture = _init();
   }
 
   Future<void> _init() async {
@@ -50,13 +52,30 @@ class WorkspaceProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  final Map<int, int> _fileIndexes = {};
+  void _updateFileIndexes() {
+    _fileIndexes
+      ..clear()
+      ..addEntries(
+        files.asMap().entries.map(
+          (entry) => MapEntry(entry.value.id, entry.key),
+        ),
+      );
+  }
+
+  void setFiles(List<FileEntity> files) {
+    this.files = List.of(files);
+    _updateFileIndexes();
+    notifyListeners();
+  }
+
   void setLastFile(int value) {
     lastFile = value;
     _prefs?.setInt(kKeyLastFile, value);
     notifyListeners();
   }
 
-  void setWorkspacePath(String? path) async {
+  Future<void> setWorkspacePath(String? path) async {
     workspacePath = path;
     notifyListeners();
     if (path != null) {
@@ -64,84 +83,69 @@ class WorkspaceProvider extends ChangeNotifier {
     }
   }
 
-  @override
-  void dispose() {
-    _externalFileWatcher?.cancel();
-    codeController.dispose();
-    findController.dispose();
-    undoController.dispose();
-    codeControllerFocus.dispose();
-    super.dispose();
-  }
-
-  void addFile(FileEntity file) async {
+  void addFile(FileEntity file) {
     files.add(file);
-    _prefs?.setString(kKeyOpenedFiles, jsonEncode(files));
+    _fileIndexes[file.id] = files.length - 1;
+    saveFilesLocal(null, files);
     notifyListeners();
   }
 
-  void setFiles(List<FileEntity> files) {
-    this.files = files;
-    notifyListeners();
-  }
-
-  void updateFile(
+  Future<void> updateFile(
     BuildContext context,
     int id,
     FileAction type, {
     String? newName,
   }) async {
-    if (id < 0 || id >= files.length) return;
-    final FileEntity localFile = files[id];
-    final File file = File(localFile.path!);
+    final index = id.getFileIndexOrLast(indexes: _fileIndexes, files: files);
+    final thisFile = files[index];
 
-    if (type == FileAction.rename && newName != null && newName.isNotEmpty) {
-      final String? newPath = localFile.path != null
-          ? "${file.parent.path}/$newName"
-          : null;
-      if (newPath != null && await file.exists()) {
-        try {
-          await file.rename(newPath);
-        } catch (_) {
-          debugPrint("فشل في تغير اسم الملف");
-          await file.copy(newPath);
-          await file.delete();
+    switch (type) {
+      case FileAction.rename:
+        if (newName == null || newName.isEmpty) break;
+        if (thisFile.path != null && await thisFile.file!.exists()) {
+          final newPath = "${thisFile.parentPath}/$newName";
+          try {
+            await thisFile.file!.rename(newPath);
+          } catch (_) {
+            debugPrint("فشل في تغير اسم الملف");
+            await thisFile.file!.copy(newPath);
+            await thisFile.file!.delete();
+          }
+
+          files[index] = thisFile.copyWith(path: newPath);
         }
-        files[id] = localFile.copyWith(path: newPath);
-      }
-
-      if (_selectedFile.id == id) setSelectedFile(files[id]);
-      if (context.mounted) openFile(id, context);
-    } else if (type == FileAction.delete || type == FileAction.close) {
-      final fileTarget = files[id];
-
-      if (type == FileAction.delete && fileTarget.path?.isNotEmpty == true) {
-        try {
-          final f = File(fileTarget.path!).absolute;
-          if (f.existsSync()) f.deleteSync(recursive: true);
-        } catch (e) {
-          debugPrint("حدث خطاء في حذف الملف: $e");
-          showMessage(
-            "فشل حذف الملف، تأكد من الصلاحيات أو أن الملف غير مستخدم",
-            isError: true,
-          );
-          return;
+        if (_selectedFile.id == thisFile.id) setSelectedFile(files[index]);
+        if (context.mounted) openFile(id, context);
+        break;
+      case FileAction.delete:
+        if (thisFile.path != null && await thisFile.file!.exists()) {
+          try {
+            await thisFile.file!.delete();
+          } catch (e) {
+            debugPrint("حدث خطاء في حذف الملف: $e");
+            showMessage(
+              "فشل حذف الملف، تأكد من الصلاحيات أو أن الملف غير مستخدم",
+              isError: true,
+            );
+            break;
+          }
         }
-      }
 
-      final removed = files.removeAt(id);
-      if (_selectedFile.id == removed.id) _selectedFile = FileEntity.empty();
-
-      if (files.isNotEmpty) {
-        openFile(files.last.id, context);
-      } else {
-        files.add(FileEntity.empty());
-        openFile(0, context);
-      }
-    } else if (type == FileAction.toggleReadOnly) {
-      files[id] = localFile.copyWith(readOnly: !localFile.readOnly);
-      if (_selectedFile.id == files[id].id) _selectedFile = files[id];
-      codeController.readOnly = files[id].readOnly;
+        files.removeAt(index);
+        _updateFileIndexes();
+        if (context.mounted) openFile(-1, context);
+        break;
+      case FileAction.close:
+        files.removeAt(index);
+        _updateFileIndexes();
+        if (context.mounted) openFile(-1, context);
+        break;
+      case FileAction.toggleReadOnly:
+        final updatedFile = thisFile.copyWith(readOnly: !thisFile.readOnly);
+        files[index] = updatedFile;
+        if (_selectedFile.id == updatedFile.id) _selectedFile = updatedFile;
+        codeController.readOnly = updatedFile.readOnly;
+        break;
     }
 
     if (context.mounted) saveFilesLocal(context);
@@ -150,7 +154,10 @@ class WorkspaceProvider extends ChangeNotifier {
 
   void setSelectedFile(FileEntity file) {
     if (_selectedFile.id != -1) {
-      final currentIndex = files.indexWhere((f) => f.id == _selectedFile.id);
+      final currentIndex = _selectedFile.id.getFileIndexOrLast(
+        indexes: _fileIndexes,
+        files: files,
+      );
       if (currentIndex != -1) {
         files[currentIndex] = files[currentIndex].copyWith(
           cursor: [
@@ -165,14 +172,12 @@ class WorkspaceProvider extends ChangeNotifier {
     if (codeController.text != file.code) codeController.text = file.code;
     codeController.readOnly = file.readOnly;
 
-    Future.microtask(() {
-      final int start = file.cursor[0].clamp(0, codeController.text.length);
-      final int end = file.cursor[1].clamp(0, codeController.text.length);
-      codeController.selection = TextSelection(
-        baseOffset: start,
-        extentOffset: end,
-      );
-    });
+    Future.microtask(
+      () => codeController.selection = TextSelection(
+        baseOffset: file.cursor[0].clamp(0, file.code.length),
+        extentOffset: file.cursor[1].clamp(0, file.code.length),
+      ),
+    );
 
     _startWatchingSelectedFile(file);
     notifyListeners();
@@ -182,12 +187,12 @@ class WorkspaceProvider extends ChangeNotifier {
     if (!_settings.get(AppSetting.autoSave) ||
         file.path == null ||
         file.path!.isEmpty) {
-      _externalFileWatcher?.cancel();
+      await _externalFileWatcher?.cancel();
       _externalFileWatcher = null;
       return;
     }
 
-    _externalFileWatcher?.cancel();
+    await _externalFileWatcher?.cancel();
     final fileToWatch = File(file.path!);
     if (!await fileToWatch.exists()) {
       _externalFileWatcher = null;
@@ -203,7 +208,10 @@ class WorkspaceProvider extends ChangeNotifier {
         autoSaveEnabled: _settings.get(AppSetting.autoSave),
       );
 
-      final index = files.indexWhere((f) => f.id == file.id);
+      final index = file.id.getFileIndexOrLast(
+        indexes: _fileIndexes,
+        files: files,
+      );
       if (index >= 0) {
         files[index] = updatedFile;
         if (selectedFile.id == file.id) {
@@ -231,7 +239,10 @@ class WorkspaceProvider extends ChangeNotifier {
         code: newCode,
         saved: autoSaveEnabled,
       );
-      final index = files.indexWhere((file) => file.id == _selectedFile.id);
+      final index = _selectedFile.id.getFileIndexOrLast(
+        indexes: _fileIndexes,
+        files: files,
+      );
       if (index >= 0) {
         files[index] = files[index].copyWith(
           code: newCode,
@@ -284,5 +295,15 @@ class WorkspaceProvider extends ChangeNotifier {
       codeControllerFocus.requestFocus();
     }
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _externalFileWatcher?.cancel();
+    codeController.dispose();
+    findController.dispose();
+    undoController.dispose();
+    codeControllerFocus.dispose();
+    super.dispose();
   }
 }

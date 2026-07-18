@@ -93,8 +93,11 @@ Future<bool> saveFileToStorage(
   return true;
 }
 
-Future<void> saveFilesLocal(BuildContext context) async {
-  final workspace = context.read<WorkspaceProvider>();
+Future<void> saveFilesLocal([
+  BuildContext? context,
+  List<FileEntity>? files,
+]) async {
+  final workspace = context?.read<WorkspaceProvider>();
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setString(kKeyOpenedFiles, jsonEncode(workspace.files));
+  await prefs.setString(kKeyOpenedFiles, jsonEncode(workspace?.files ?? files));
 }

@@ -36,6 +36,9 @@ class FileEntity {
   String get name =>
       path?.split(Platform.pathSeparator).last ?? tempName ?? "بدون_اسم";
 
+  File? get file => path != null ? File(path!) : null;
+  String get parentPath => file?.parent.path ?? "";
+
   Map<String, dynamic> toJson() {
     return {
       "id": id,

@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 import "../../../../constants.dart";
+import "../../../../core/extensions/extensions.dart";
 import "../../../../core/models/data_typs.dart";
 import "../../../../core/providers/workspace_provider.dart";
 import "../../../../core/services/files/open_file.dart";
@@ -13,10 +14,10 @@ class OpenedFiles extends StatelessWidget {
 
   Future<void> onLongPress(
     BuildContext context,
-    dynamic id,
+    int id,
     WorkspaceProvider data,
   ) async {
-    final file = data.files[id];
+    final file = id.getFileOrLast(context: context);
     final TextEditingController controller = TextEditingController(
       text: file.name,
     );
