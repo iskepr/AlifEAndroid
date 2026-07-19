@@ -20,8 +20,10 @@ class _TerminalInputState extends State<TerminalInput> {
   @override
   void initState() {
     super.initState();
-    inputController.addListener(() =>
-      context.read<TerminalProvider>().updateSuggestions(inputController.text);
+    inputController.addListener(
+      () => context.read<TerminalProvider>().updateSuggestions(
+        inputController.text,
+      ),
     );
   }
 
@@ -93,8 +95,7 @@ class _TerminalInputState extends State<TerminalInput> {
                   .map(
                     (suggestion) => InkWell(
                       borderRadius: BorderRadius.circular(8),
-                      onTap: () =>
-                          _applySuggestion(suggestion, terminal),
+                      onTap: () => _applySuggestion(suggestion, terminal),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                           vertical: 6,
@@ -132,8 +133,7 @@ class _TerminalInputState extends State<TerminalInput> {
                     focusNode: terminal.terminalFocus,
                     autofocus: true,
                     controller: inputController,
-                    onSubmitted: (_) =>
-                        runCommandHandler(terminal, context),
+                    onSubmitted: (_) => runCommandHandler(terminal, context),
                     style: TextStyle(
                       color: context.foreground,
                       fontFamily: kTerminalFont,

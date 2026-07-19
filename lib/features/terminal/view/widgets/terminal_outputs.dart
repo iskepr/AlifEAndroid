@@ -1,7 +1,9 @@
+import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:lucide_icons_flutter/lucide_icons.dart";
 import "package:provider/provider.dart";
+import "package:url_launcher/url_launcher.dart";
 
 import "../../../../constants.dart";
 import "../../../../core/models/data_typs.dart";
@@ -143,20 +145,27 @@ class _TextGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String combinedText = group.map((e) => e.text).join("\n");
-    if (combinedText.isEmpty) return const SizedBox.shrink();
+    final lineStyle = TextStyle(
+      fontSize: kSmallFont,
+      color: isCommand ? Colors.grey : _getLineColor(type),
+      fontStyle: isCommand ? FontStyle.italic : FontStyle.normal,
+      fontWeight: (type != LineType.normal || isCommand)
+          ? FontWeight.bold
+          : null,
+      height: isCommand ? 2.2 : 1.5,
+    );
 
-    return SelectableText(
-      combinedText,
-      style: TextStyle(
-        fontSize: kSmallFont,
-        color: _getLineColor(type),
-        fontStyle: isCommand ? FontStyle.italic : FontStyle.normal,
-        fontWeight: (type != LineType.normal || isCommand)
-            ? FontWeight.bold
-            : null,
-        height: isCommand ? 2.2 : 1.5,
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: group.map((line) {
+        return SelectableText.rich(
+          TextSpan(
+            children: _buildTextSpans(line.text, lineStyle),
+            style: lineStyle,
+          ),
+          textDirection: _getTextDirection(line.text),
+        );
+      }).toList(),
     );
   }
 
@@ -173,5 +182,90 @@ class _TextGroup extends StatelessWidget {
       case LineType.normal:
         return Colors.white;
     }
+  }
+
+  List<TextSpan> _buildTextSpans(String text, TextStyle style) {
+    final spans = <TextSpan>[];
+    final markerRegex = RegExp(r"(.*?)\u0000(.*?)\u0001", dotAll: true);
+    int lastIndex = 0;
+
+    for (final match in markerRegex.allMatches(text)) {
+      if (match.start > lastIndex) {
+        spans.addAll(
+          _buildUrlSpans(text.substring(lastIndex, match.start), style),
+        );
+      }
+      final visible = match.group(1) ?? "";
+      final url = match.group(2) ?? "";
+      if (visible.isNotEmpty) {
+        spans.add(_linkTextSpan(visible, style, url));
+      }
+      lastIndex = match.end;
+    }
+
+    if (lastIndex < text.length) {
+      spans.addAll(_buildUrlSpans(text.substring(lastIndex), style));
+    }
+
+    return spans;
+  }
+
+  List<TextSpan> _buildUrlSpans(String text, TextStyle style) {
+    final spans = <TextSpan>[];
+    final urlRegex = RegExp(r"(https?:\/\/[\S]+)");
+    int lastMatchEnd = 0;
+
+    for (final match in urlRegex.allMatches(text)) {
+      if (match.start > lastMatchEnd) {
+        spans.add(
+          TextSpan(
+            text: text.substring(lastMatchEnd, match.start),
+            style: style,
+          ),
+        );
+      }
+      final url = match.group(0)!;
+      spans.add(_linkTextSpan(url, style, url));
+      lastMatchEnd = match.end;
+    }
+
+    if (lastMatchEnd < text.length) {
+      spans.add(TextSpan(text: text.substring(lastMatchEnd), style: style));
+    }
+
+    return spans;
+  }
+
+  TextSpan _linkTextSpan(String display, TextStyle style, String url) {
+    return TextSpan(
+      text: display,
+      style: style.copyWith(
+        color: _getLineColor(LineType.warning),
+        decoration: TextDecoration.underline,
+        decorationColor: _getLineColor(LineType.warning),
+      ),
+      recognizer: TapGestureRecognizer()
+        ..onTap = () async {
+          final uri = Uri.tryParse(url);
+          if (uri != null && await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          }
+        },
+    );
+  }
+
+  TextDirection? _getTextDirection(String text) {
+    final trimmed = text.trimLeft();
+    if (trimmed.isEmpty) return TextDirection.rtl;
+
+    final arabic = RegExp(r"([\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]|~)");
+    final latinDigit = RegExp(r"[A-Za-z0-9]");
+
+    for (final char in trimmed.characters) {
+      if (arabic.hasMatch(char)) return TextDirection.rtl;
+      if (latinDigit.hasMatch(char)) return TextDirection.ltr;
+    }
+
+    return TextDirection.ltr;
   }
 }

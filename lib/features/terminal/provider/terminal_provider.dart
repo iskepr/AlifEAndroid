@@ -84,6 +84,7 @@ class TerminalProvider extends ChangeNotifier {
   }
 
   Future<void> saveHistory(String command) async {
+    if (runningProcess != null) return;
     final cleaned = command.trim();
     if (cleaned.isEmpty) return;
 
@@ -169,10 +170,26 @@ class TerminalProvider extends ChangeNotifier {
   }
 }
 
+String _sanitizeTerminalText(String text) {
+  var output = text;
+  output = output.replaceAllMapped(
+    RegExp(r"\x1B\]8;;([^\x07\x1B]*)\x1B\\(.*?)\x1B\]8;;\x1B\\", dotAll: true),
+    (match) {
+      final url = match.group(1) ?? "";
+      final visible = match.group(2) ?? "";
+      return "$visible\u0000$url\u0001";
+    },
+  );
+  output = output.replaceAll(RegExp(r"\x1B\][^\x07\x1B]*(?:\x07|\x1B\\)"), "");
+  output = output.replaceAll(RegExp(r"\x1B\[[0-?]*[ -/]*[@-~]"), "");
+  output = output.replaceAll("\x1B\\", "");
+  return output;
+}
+
 List<TerminalLine> parseTerminalOutputInBackground(
   Map<String, dynamic> params,
 ) {
-  final String text = params["text"] as String;
+  final String text = _sanitizeTerminalText(params["text"] as String);
   final List<TerminalLine> currentLines = List<TerminalLine>.from(
     params["currentLines"],
   );
