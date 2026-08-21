@@ -36,11 +36,13 @@ class WorkspaceProvider extends ChangeNotifier {
 
   WorkspaceProvider(this._settings) {
     codeController = CodeController();
+    codeController.tabSize = codeController.detectIndentation();
     codeControllerFocus = FocusNode();
     codeControllerFocus.addListener(_onFocusChange);
     findController = FindController(codeController);
     undoController = UndoRedoController();
     _selectedFile = FileEntity.empty();
+    _settings.addListener(_handleSettingsChanged);
     initFuture = _init();
   }
 
@@ -223,6 +225,15 @@ class WorkspaceProvider extends ChangeNotifier {
     });
   }
 
+  void _handleSettingsChanged() {
+    final nextTabSize = _settings.get<int>(AppSetting.tabSize);
+    if (codeController.tabSize == nextTabSize) return;
+
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => codeController.reindentDocument(newTabSize: nextTabSize),
+    );
+  }
+
   void editCode(
     String newCode,
     bool autoSaveEnabled, {
@@ -297,6 +308,7 @@ class WorkspaceProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _settings.removeListener(_handleSettingsChanged);
     _externalFileWatcher?.cancel();
     codeController.dispose();
     findController.dispose();

@@ -4,32 +4,30 @@ publish_to: none
 version: 1.2.0
 
 environment:
-    sdk: ">=3.12.0 <4.0.0"
+    sdk: ">=3.13.1 <4.0.0"
 
 dependencies:
-    code_forge: ^10.8.0
-    file_saver: ^0.3.1
+    code_forge: ^10.12.0
+    file_saver: ^0.4.0
     flutter:
         sdk: flutter
-    flutter_code_editor: ^0.3.5
     flutter_localizations:
         sdk: flutter
-    fluttertoast: ^9.0.0
-    highlight: ^0.7.0
+    fluttertoast: ^10.0.0
     hive_flutter: ^1.1.0
     http: ^1.6.0
     input_quantity: ^2.3.2
-    lucide_icons_flutter: ^3.1.9
+    lucide_icons_flutter: ^3.1.15
     ota_update: ^7.1.0
-    package_info_plus: ^9.0.0
+    package_info_plus: ^10.2.1
     path: ^1.9.1
     path_provider: ^2.1.5
-    permission_handler: ^12.0.1
+    permission_handler: ^13.0.0
     provider: ^6.1.5+1
     re_highlight: ^0.0.3
-    share_plus: ^12.0.2
+    share_plus: ^13.3.0
     url_launcher: ^6.3.2
-    vibration: ^3.1.8
+    vibration: ^3.2.0
 
 dev_dependencies:
     flutter_lints: ^5.0.0

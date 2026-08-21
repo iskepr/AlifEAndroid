@@ -164,6 +164,7 @@ class _TextGroup extends StatelessWidget {
             style: lineStyle,
           ),
           textDirection: _getTextDirection(line.text),
+          textAlign: TextAlign.right,
         );
       }).toList(),
     );

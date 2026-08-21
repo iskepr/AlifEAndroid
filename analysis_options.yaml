@@ -5,6 +5,12 @@ analyzer:
         - "lib/generated/**"
         - "**.g.dart"
         - "build/**"
+        - android/**
+        - ios/**
+        - web/**
+        - windows/**
+        - macos/**
+        - linux/**
 
     errors:
         unused_import: warning
