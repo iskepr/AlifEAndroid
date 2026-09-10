@@ -1,8 +1,6 @@
-import "dart:convert";
+import "dart:async";
 import "dart:io";
-import "dart:typed_data";
 
-import "package:file_saver/file_saver.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
@@ -11,10 +9,12 @@ import "../../../features/terminal/provider/terminal_provider.dart";
 import "../../helpers/hive_helper.dart";
 import "../../models/data_typs.dart";
 import "../../providers/workspace_provider.dart";
+import "../../utils/file_picker.dart";
 
 Future<bool> saveFileToStorage(
   BuildContext context, {
   bool asNew = false,
+  String rootPath = "/storage/emulated/0",
 }) async {
   final workspace = context.read<WorkspaceProvider>();
   final terminal = context.read<TerminalProvider>();
@@ -33,27 +33,44 @@ Future<bool> saveFileToStorage(
   );
 
   if (selectedFile.path == null || selectedFile.path!.isEmpty || asNew) {
-    try {
-      final bytes = Uint8List.fromList(utf8.encode(code));
-      final path = await FileSaver.instance.saveAs(
-        name: (selectedFile.name.isEmpty)
-            ? "شفرة"
-            : selectedFile.name.replaceAll(
-                RegExp(r"\.(الف|alif|aliflib)$"),
-                "",
-              ),
-        bytes: bytes,
-        fileExtension: "الف",
-        mimeType: MimeType.other,
-      );
+    final completer = Completer<String?>();
 
-      if (path == null || path.isEmpty) {
-        terminal.addOutput("تم إلغاء الحفظ.");
-        return false;
-      }
+    final defaultName = (selectedFile.name.isEmpty)
+        ? "شفرة"
+        : selectedFile.name.replaceAll(RegExp(r"\.(الف|alif|aliflib)$"), "");
+
+    final startDir =
+        (selectedFile.path != null && selectedFile.path!.isNotEmpty)
+        ? File(selectedFile.path!).parent.path
+        : rootPath;
+
+    await showFileManagerModal(
+      context,
+      (selectedPath) {
+        if (!completer.isCompleted) completer.complete(selectedPath);
+      },
+      rootPath: rootPath,
+      startPath: startDir,
+      isSaveMode: true,
+      defaultFileName: defaultName,
+      onSave: (fullPath) {
+        if (!completer.isCompleted) completer.complete(fullPath);
+      },
+    );
+
+    final targetPath = await completer.future;
+
+    if (targetPath == null || targetPath.isEmpty) {
+      terminal.addOutput("تم إلغاء الحفظ.");
+      return false;
+    }
+
+    try {
+      final file = File(targetPath);
+      await file.writeAsString(code);
 
       final FileEntity fileData = selectedFile.copyWith(
-        path: path,
+        path: targetPath,
         code: code,
         saved: true,
       );
@@ -66,7 +83,7 @@ Future<bool> saveFileToStorage(
 
       workspace.setSelectedFile(fileData);
       workspace.setFiles(filesList);
-      terminal.addOutput("تم الحفظ في: $path");
+      terminal.addOutput("تم الحفظ في: $targetPath");
     } catch (e) {
       terminal.addOutput("خطأ أثناء الحفظ: $e");
       return false;
@@ -98,6 +115,6 @@ Future<void> saveFilesLocal([
   List<FileEntity>? files,
 ]) async {
   final workspace = context?.read<WorkspaceProvider>();
-  final finalFilse = workspace?.files ?? files ?? [];
-  await HiveHelper.saveListData<FileEntity>(kBoxOpenedFiles, finalFilse);
+  final finalFiles = workspace?.files ?? files ?? [];
+  await HiveHelper.saveListData<FileEntity>(kBoxOpenedFiles, finalFiles);
 }

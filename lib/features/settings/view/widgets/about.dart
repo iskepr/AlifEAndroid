@@ -62,7 +62,7 @@ class About extends StatelessWidget {
             TextButton.icon(
               icon: Icon(LucideIcons.earth, color: context.secondary, size: 13),
               onPressed: () =>
-                  _launchUrl("https://skepr.vercel.app/?from=TaifIDE"),
+                  _launchUrl("https://skepr.me/?from=TaifIDE"),
               label: const Text("تطـوير مُحمد سكيبر", style: ThemeText.smallG),
             ),
           ],
