@@ -1,4 +1,4 @@
-import "package:hive_flutter/hive_flutter.dart";
+import "package:hive_ce_flutter/hive_ce_flutter.dart";
 import "package:path_provider/path_provider.dart";
 
 import "../../constants.dart";
@@ -9,7 +9,7 @@ class HiveHelper {
 
   static Future<void> init() async {
     final dir = await getApplicationSupportDirectory();
-    await Hive.initFlutter(dir.path);
+    await Hive.initFlutter("${dir.path}/hive");
 
     try {
       Hive.registerAdapter(FileEntityAdapter());

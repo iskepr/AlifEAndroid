@@ -1,7 +1,9 @@
 import "dart:io";
+
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
+import "../../../constants.dart";
 import "../../providers/workspace_provider.dart";
 import "../../utils/file_picker.dart";
 import "../../utils/show_message.dart";
@@ -42,6 +44,6 @@ Future<void> openFileFromStorage(
       onFolderSelected: (folderPath) => workspace.setWorkspacePath(folderPath),
     );
   } catch (e) {
-    showMessage("فشل في فتح الملف بسبب خطأ في القراءة");
+    showMessage("فشل في فتح الملف بسبب ${l10n.error} في القراءة");
   }
 }

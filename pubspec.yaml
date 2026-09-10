@@ -4,66 +4,62 @@ publish_to: none
 version: 1.2.0
 
 environment:
-    sdk: ">=3.13.2 <4.0.0"
+  sdk: ">=3.13.2 <4.0.0"
 
 dependencies:
-    code_forge: ^10.14.0
-    flutter:
-        sdk: flutter
-    flutter_localizations:
-        sdk: flutter
-    fluttertoast: ^10.0.0
-    hive_flutter: ^1.1.0
-    http: ^1.6.0
-    input_quantity: ^2.3.2
-    lucide_icons_flutter: ^3.1.17
-    ota_update: ^7.1.0
-    package_info_plus: ^10.2.1
-    path: ^1.9.1
-    path_provider: ^2.1.5
-    permission_handler: ^13.0.0
-    provider: ^6.1.5+1
-    re_highlight: ^0.0.3
-    share_plus: ^13.3.0
-    url_launcher: ^6.3.2
-    vibration: ^3.2.0
+  archive: ^4.2.0
+  code_forge: ^10.14.0
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  fluttertoast: ^10.0.0
+  hive_ce_flutter: ^2.3.4
+  http: ^1.6.0
+  input_quantity: ^2.6.0
+  lucide_icons_flutter: ^3.1.19
+  ota_update: ^7.1.0
+  package_info_plus: ^10.2.1
+  path: ^1.9.1
+  path_provider: ^2.1.5
+  permission_handler: ^13.0.0
+  provider: ^6.1.5+1
+  re_highlight: ^0.0.3
+  share_plus: ^13.3.0
+  url_launcher: ^6.3.2
+  vibration: ^3.2.0
 
 dev_dependencies:
-    flutter_lints: ^5.0.0
-    hive_generator: ^2.0.1
-    build_runner: ^2.4.9
-    flutter_test:
-        sdk: flutter
+  build_runner: ^2.4.13
+  flutter_lints: ^6.0.0
+  hive_generator: ^2.0.1
 
 flutter:
-    uses-material-design: true
+  uses-material-design: true
 
-    assets:
-        - assets/
-        - assets/examples/
-        - assets/aliflang/
-        - assets/aliflang/library/
-        - assets/aliflang/arm64-v8a/alif_lsp
-        - assets/aliflang/arm64-v8a/libalif.so
-        - assets/aliflang/arm64-v8a/libc++_shared.so
-        - assets/aliflang/linux/alif/amd64
+  assets:
+    - assets/
+    - assets/examples/
+    - assets/aliflang/
+    - assets/aliflang/arm64-v8a/
+    - assets/aliflang/linux/alif/
 
-    fonts:
-        - family: tajawal
-          fonts:
-              - asset: assets/fonts/tajawal.ttf
-        - family: noto_kufi
-          fonts:
-              - asset: assets/fonts/noto_kufi_arabic_regular.ttf
-        - family: kawkab
-          fonts:
-              - asset: assets/fonts/kawkab_mono_regular.ttf
-        - family: hasubi
-          fonts:
-              - asset: assets/fonts/hasubi_mono.ttf
-        - family: alaq_halab
-          fonts:
-              - asset: assets/fonts/alaq_halab.otf
+  fonts:
+    - family: tajawal
+      fonts:
+        - asset: assets/fonts/tajawal.ttf
+    - family: noto_kufi
+      fonts:
+        - asset: assets/fonts/noto_kufi_arabic_regular.ttf
+    - family: kawkab
+      fonts:
+        - asset: assets/fonts/kawkab_mono_regular.ttf
+    - family: hasubi
+      fonts:
+        - asset: assets/fonts/hasubi_mono.ttf
+    - family: alaq_halab
+      fonts:
+        - asset: assets/fonts/alaq_halab.otf
 
 flutter_intl:
-    enabled: true
+  enabled: true

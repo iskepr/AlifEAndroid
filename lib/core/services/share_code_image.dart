@@ -61,7 +61,7 @@ class ShareAsImageService {
       ], text: "كود ${workspace.selectedFile.name}");
     } catch (e) {
       debugPrint("share error: $e");
-      showMessage("خطأ في المشاركة: $e");
+      showMessage("${l10n.error} في المشاركة: $e");
     }
   }
 

@@ -3,6 +3,7 @@ import "package:flutter/material.dart";
 import "package:input_quantity/input_quantity.dart";
 import "package:lucide_icons_flutter/lucide_icons.dart";
 import "package:provider/provider.dart";
+
 import "../../../constants.dart";
 import "../../../core/providers/settings_provider.dart";
 import "../../../core/theme/colors.dart";
@@ -51,7 +52,7 @@ class SettingsView extends StatelessWidget {
                 title: "حجم المسافة",
                 subTitle: "($kCodeSpaceLength)",
                 value: settings.get<int>(AppSetting.tabSize),
-                min: 2,
+                min: 1,
                 max: 10,
                 onChanged: (val) =>
                     settings.set(AppSetting.tabSize, val.toInt()),
@@ -64,6 +65,7 @@ class SettingsView extends StatelessWidget {
                 AppSetting.lineWrap,
                 "النظام",
                 AppSetting.enableVibration,
+                // TODO: اظهار رسالة يجب اعادة تشغيل التطبيق
                 AppSetting.customKeyboard,
               ].map((setting) {
                 if (setting is String) {

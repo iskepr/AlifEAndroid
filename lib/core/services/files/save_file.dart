@@ -14,8 +14,10 @@ import "../../utils/file_picker.dart";
 Future<bool> saveFileToStorage(
   BuildContext context, {
   bool asNew = false,
-  String rootPath = "/storage/emulated/0",
+  String? rootPath,
 }) async {
+  final finalRootPath = rootPath ?? kHomeDir;
+
   final workspace = context.read<WorkspaceProvider>();
   final terminal = context.read<TerminalProvider>();
 
@@ -49,7 +51,7 @@ Future<bool> saveFileToStorage(
       (selectedPath) {
         if (!completer.isCompleted) completer.complete(selectedPath);
       },
-      rootPath: rootPath,
+      rootPath: finalRootPath,
       startPath: startDir,
       isSaveMode: true,
       defaultFileName: defaultName,
@@ -85,7 +87,7 @@ Future<bool> saveFileToStorage(
       workspace.setFiles(filesList);
       terminal.addOutput("تم الحفظ في: $targetPath");
     } catch (e) {
-      terminal.addOutput("خطأ أثناء الحفظ: $e");
+      terminal.addOutput("${l10n.error} أثناء الحفظ: $e");
       return false;
     }
   } else {
@@ -100,7 +102,7 @@ Future<bool> saveFileToStorage(
       }
       workspace.setFiles(filesList);
     } catch (e) {
-      terminal.addOutput("خطأ أثناء الحفظ: $e");
+      terminal.addOutput("${l10n.error} أثناء الحفظ: $e");
       return false;
     }
   }

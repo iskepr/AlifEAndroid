@@ -4,6 +4,7 @@ import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
 import "../../../constants.dart";
+import "../../../core/models/data_typs.dart";
 import "../../../core/providers/workspace_provider.dart";
 import "../provider/terminal_provider.dart";
 import "run_command.dart";
@@ -128,7 +129,7 @@ void _showHelp(TerminalProvider terminal) {
     final aliasesStr = cmd.aliases.join(" | ");
     buffer.writeln("$aliasesStr: ${cmd.description}");
   }
-  terminal.addOutput(buffer.toString().trim(), isError: false);
+  terminal.addOutput(buffer.toString().trim(), type: LineType.warning);
 }
 
 Future<void> _handleCdCommand(
@@ -141,12 +142,12 @@ Future<void> _handleCdCommand(
 
   if (await dir.exists()) {
     workspace.setWorkspacePath(dir.path);
-    terminal.addOutput("تم الانتقال إلى: ${dir.path}", isError: false);
+    terminal.addOutput("تم الانتقال إلى: ${dir.path}", type: LineType.info);
     await _handleLsCommand(workspace, terminal, []);
   } else {
     terminal.addOutput(
       "cd: $targetDir: لا يوجد مجلد بهذا الاسم",
-      isError: true,
+      type: LineType.error,
     );
   }
   terminal.clearRunningProcess();
@@ -165,7 +166,7 @@ Future<void> _handleLsCommand(
   if (!await dir.exists()) {
     terminal.addOutput(
       "ls: $targetDir: لا يوجد مجلد بهذا الاسم",
-      isError: true,
+      type: LineType.error,
     );
     return;
   }
@@ -189,7 +190,7 @@ Future<void> _handleLsCommand(
     final output = [...directories, ...files].join("  ");
     terminal.addOutput(output);
   } catch (e) {
-    terminal.addOutput("ls: لا يمكن قراءة المحتوى: $e", isError: true);
+    terminal.addOutput("ls: لا يمكن قراءة المحتوى: $e", type: LineType.error);
   }
 }
 
@@ -199,7 +200,7 @@ Future<void> _handleMkdirCommand(
   List<String> args,
 ) async {
   if (args.isEmpty) {
-    terminal.addOutput("mkdir: يجب تحديد اسم المجلد", isError: true);
+    terminal.addOutput("mkdir: يجب تحديد اسم المجلد", type: LineType.error);
     return;
   }
 
@@ -209,7 +210,7 @@ Future<void> _handleMkdirCommand(
   if (await dir.exists()) {
     terminal.addOutput(
       "mkdir: المجلد '${args[0]}' موجود بالفعل",
-      isError: true,
+      type: LineType.error,
     );
   } else {
     await dir.create(recursive: true);
@@ -222,7 +223,7 @@ Future<void> _handleTouchCommand(
   List<String> args,
 ) async {
   if (args.isEmpty) {
-    terminal.addOutput("touch: يجب تحديد اسم الملف", isError: true);
+    terminal.addOutput("touch: يجب تحديد اسم الملف", type: LineType.error);
     return;
   }
 
@@ -246,7 +247,7 @@ Future<void> _handleRmCommand(
   if (args.isEmpty) {
     terminal.addOutput(
       "rm: يجب تحديد اسم الملف أو المجلد للحذف",
-      isError: true,
+      type: LineType.error,
     );
     return;
   }
@@ -266,17 +267,17 @@ Future<void> _handleRmCommand(
       } else {
         terminal.addOutput(
           "rm: '$targetName' مجلد، استخدم -r لحذفه",
-          isError: true,
+          type: LineType.error,
         );
       }
     } else {
       terminal.addOutput(
         "rm: $targetName: لا يوجد ملف أو مجلد بهذا الاسم",
-        isError: true,
+        type: LineType.error,
       );
     }
   } catch (e) {
-    terminal.addOutput("rm: فشل الحذف: $e", isError: true);
+    terminal.addOutput("rm: فشل الحذف: $e", type: LineType.error);
   }
 }
 

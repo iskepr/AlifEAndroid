@@ -5,6 +5,7 @@ import "package:http/http.dart" as http;
 import "package:lucide_icons_flutter/lucide_icons.dart";
 import "package:ota_update/ota_update.dart";
 import "package:package_info_plus/package_info_plus.dart";
+import "../../constants.dart";
 import "../theme/colors.dart";
 import "../theme/text.dart";
 import "../widgets/show_bottom_sheet.dart";
@@ -101,7 +102,7 @@ Future<void> checkUpdate(BuildContext context) async {
       }
     }
   } catch (e) {
-    debugPrint("حديث خطأ: $e");
+    debugPrint("حديث ${l10n.error}: $e");
   }
 }
 

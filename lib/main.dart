@@ -2,6 +2,7 @@ import "package:code_forge/code_forge.dart";
 import "package:flutter/material.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
 import "package:provider/provider.dart";
+
 import "constants.dart";
 import "core/helpers/hive_helper.dart";
 import "core/providers/settings_provider.dart";
@@ -23,6 +24,7 @@ void main() async {
       providers: [
         // Settings Provider
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
+
         // Workspace Provider
         ChangeNotifierProxyProvider<SettingsProvider, WorkspaceProvider>(
           create: (context) =>
@@ -32,15 +34,24 @@ void main() async {
             return WorkspaceProvider(settings);
           },
         ),
-        // Terminal Provider
-        ChangeNotifierProxyProvider<SettingsProvider, TerminalProvider>(
-          create: (context) =>
-              TerminalProvider(context.read<SettingsProvider>()),
-          update: (context, settings, terminal) {
-            if (terminal != null) return terminal;
-            return TerminalProvider(settings);
+
+        // Terminal Provider - بياخد Settings و Workspace مع بعض
+        ChangeNotifierProxyProvider2<
+          SettingsProvider,
+          WorkspaceProvider,
+          TerminalProvider
+        >(
+          create: (context) => TerminalProvider(
+            context.read<SettingsProvider>(),
+            context.read<WorkspaceProvider>(),
+          ),
+          update: (context, settings, workspace, terminal) {
+            final provider = terminal ?? TerminalProvider(settings, workspace);
+            provider.updateWorkspace(workspace);
+            return provider;
           },
         ),
+
         // Shortcuts Provider
         ChangeNotifierProvider(create: (_) => ShortcutsProvider()),
       ],

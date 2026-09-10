@@ -2,6 +2,7 @@
 import "dart:io";
 
 import "package:flutter/material.dart";
+
 import "generated/l10n.dart";
 
 const String kMainFont = "tajawal";
@@ -62,6 +63,7 @@ final String kHomeDir = Platform.isAndroid
     : Platform.isLinux
     ? "${Platform.environment["HOME"]}"
     : "";
+
 const String kAlifBin = "الف";
 const String kTempFileName = "مؤقت.الف";
 const String kLinkerPath = "/system/bin/linker64";

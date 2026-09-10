@@ -225,7 +225,6 @@ class WorkspaceProvider extends ChangeNotifier {
     });
   }
 
-  // TODO: احيانا الملفات المفتوحة من الجهاز لا يتحدث ال tab الخاص بها
   void _handleSettingsChanged() {
     final nextTabSize = _settings.get<int>(AppSetting.tabSize);
     if (codeController.tabSize == nextTabSize) return;

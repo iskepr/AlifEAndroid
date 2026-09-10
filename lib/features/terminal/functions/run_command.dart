@@ -6,6 +6,7 @@ import "package:path_provider/path_provider.dart";
 import "package:provider/provider.dart";
 
 import "../../../constants.dart";
+import "../../../core/models/data_typs.dart";
 import "../../../core/providers/settings_provider.dart";
 import "../../../core/providers/workspace_provider.dart";
 import "../provider/terminal_provider.dart";
@@ -45,7 +46,7 @@ Future<void> runCommand(BuildContext context, String commandInput) async {
     }
   } catch (e, s) {
     debugPrint("استثناء: $e\n$s");
-    terminal.addOutput("استثناء أثناء التشغيل: $e", isError: true);
+    terminal.addOutput("استثناء أثناء التشغيل: $e", type: LineType.error);
     terminal.clearRunningProcess();
   }
 }
@@ -60,7 +61,10 @@ Future<void> _runAlifCommand(
 
   final alifFile = File(binPath);
   if (!await alifFile.exists()) {
-    terminal.addOutput("لم يتم العثور على ملف تشغيل اللغة", isError: true);
+    terminal.addOutput(
+      "لم يتم العثور على ملف تشغيل اللغة",
+      type: LineType.error,
+    );
     return;
   }
 
@@ -148,7 +152,10 @@ Future<File> _prepareCodeFile(
     final file = File(fileData.path!);
     final content = await file.readAsString();
     if (content != fileData.code) {
-      terminal.addOutput("لم يتم حفظ التعديلات الأخيرة", isError: false);
+      terminal.addOutput(
+        "لم يتم حفظ التعديلات الأخيرة",
+        type: LineType.warning,
+      );
     }
     return file;
   } else {
@@ -195,7 +202,7 @@ Future<void> _executeAndListen(
     if (isGitClone && !args.contains("--progress")) finalArgs.add("--progress");
     finalExecutable = settings.get(AppSetting.gitBinPath) ?? executable;
     if (Platform.isAndroid && finalExecutable == "git") {
-      terminal.addOutput("لم يتم العثور على تطبيق Git.", isError: true);
+      terminal.addOutput("لم يتم العثور على تطبيق Git.", type: LineType.error);
       terminal.clearRunningProcess();
       return;
     }
@@ -231,13 +238,16 @@ Future<void> _executeAndListen(
             }
 
             final isWarning = cleanLine.toLowerCase().contains("warning");
-            terminal.addOutput(cleanLine, isError: isWarning ? false : null);
+            terminal.addOutput(
+              cleanLine,
+              type: isWarning ? LineType.warning : null,
+            );
           }
         } else {
           final isWarning = result.toLowerCase().contains("warning");
           terminal.addOutput(
             result,
-            isError: isWarning ? false : null,
+            type: isWarning ? LineType.warning : null,
             newLine: false,
           );
         }
@@ -275,10 +285,13 @@ Future<void> _executeAndListen(
 
   await Future.wait([stdoutFuture, stderrFuture]);
 
-  final exitCode = await process.exitCode;
-  if (exitCode != 0) {
-    terminal.addOutput("انتهت العملية برمز خطأ [$exitCode]", isError: true);
-  }
+  // final exitCode = await process.exitCode;
+  // if (exitCode != 0) {
+  //   terminal.addOutput(
+  //     "انتهت العملية برمز ${l10n.error} [$exitCode]",
+  //     type: LineType.error,
+  //   );
+  // }
 
   terminal.clearRunningProcess();
 }

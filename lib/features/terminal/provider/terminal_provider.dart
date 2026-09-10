@@ -1,5 +1,6 @@
 import "dart:io";
 
+import "package:code_forge/code_forge.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 
@@ -7,12 +8,14 @@ import "../../../constants.dart";
 import "../../../core/helpers/hive_helper.dart";
 import "../../../core/models/data_typs.dart";
 import "../../../core/providers/settings_provider.dart";
+import "../../../core/providers/workspace_provider.dart";
 import "../functions/handle_commands.dart";
 import "../utils/terminal_parser.dart";
 
 class TerminalProvider extends ChangeNotifier {
   late final FocusNode terminalFocus;
   final SettingsProvider _settings;
+  WorkspaceProvider? _workspace;
 
   final List<TerminalLine> outputLines = [];
   String get output => outputLines.map((e) => e.text).join("\n");
@@ -25,12 +28,16 @@ class TerminalProvider extends ChangeNotifier {
   List<String> suggestions = [];
   List<String> history = [];
 
-  TerminalProvider(this._settings) {
+  TerminalProvider(this._settings, [this._workspace]) {
     terminalFocus = FocusNode();
     history = HiveHelper.getListDataByKey<String>(
       kBoxSettings,
       kKeyBashHistory,
     );
+  }
+
+  void updateWorkspace(WorkspaceProvider workspace) {
+    _workspace = workspace;
   }
 
   void startNewTerminalSession() {
@@ -41,7 +48,6 @@ class TerminalProvider extends ChangeNotifier {
   Future<void> addOutput(
     String text, {
     bool newLine = true,
-    bool? isError,
     LineType? type,
   }) async {
     final Map<String, dynamic> params = {
@@ -49,7 +55,6 @@ class TerminalProvider extends ChangeNotifier {
       "currentLines": List<TerminalLine>.from(outputLines),
       "sessionId": currentSessionId,
       "type": type,
-      "isError": isError,
       "newLine": newLine,
       "errorLabel": l10n.error,
       "warningLabel": l10n.warning,
@@ -63,13 +68,27 @@ class TerminalProvider extends ChangeNotifier {
     outputLines.clear();
     outputLines.addAll(processedLines);
 
-    notifyListeners();
-
     final LineType finalType =
         type ??
         (outputLines.isNotEmpty ? outputLines.last.type : LineType.normal);
+
+    final hasError =
+        type == LineType.error ||
+        processedLines.any((line) => line.type == LineType.error);
+
+    if (hasError && _workspace != null) {
+      final fullContent = processedLines.map((e) => e.text).join("\n");
+      final diagnostic = _parsePythonArabicError(fullContent);
+
+      if (diagnostic != null) {
+        _workspace!.codeController.diagnosticsNotifier.value = [diagnostic];
+      }
+    }
+
+    notifyListeners();
+
     _settings.runVibration(
-      pattern: finalType == LineType.error
+      pattern: hasError
           ? [0, 100, 50, 100]
           : finalType == LineType.warning
           ? [0, 100]
@@ -257,4 +276,34 @@ List<TerminalLine> parseTerminalOutputInBackground(
   }
 
   return currentLines;
+}
+
+DiagnosticLine? _parsePythonArabicError(String text) {
+  final regex = RegExp(
+    r"السطر[^\d\n\r]*([0-9\u0660-\u0669]+)[\s\S]*?خطأ[^\s:]*:\s*(.+)",
+  );
+
+  final match = regex.firstMatch(text);
+  if (match == null) return null;
+
+  final message = match.group(2)?.trim() ?? "";
+
+  String rawLine = match.group(1) ?? "1";
+  const arabicDigits = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+  for (int i = 0; i < arabicDigits.length; i++) {
+    rawLine = rawLine.replaceAll(arabicDigits[i], i.toString());
+  }
+
+  final parsedLine = int.tryParse(rawLine) ?? 1;
+  final line = (parsedLine < 1 ? 1 : parsedLine) - 1;
+  const col = 0;
+
+  return DiagnosticLine(
+    message: message,
+    severity: 1,
+    range: {
+      "start": {"line": line, "character": col},
+      "end": {"line": line, "character": col + 1},
+    },
+  );
 }
